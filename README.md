@@ -3,4 +3,5 @@ Smart Apartment Maintenance Management System is a DBMS-based application that m
 
 ## Folder Structure :
 
-<img width="561" height="826" alt="image" src="https://github.com/user-attachments/assets/b793f62a-e09d-46ee-aed5-e4f5bf3dfa9c" />
+<img width="364" height="988" alt="image" src="https://github.com/user-attachments/assets/0a36a368-68be-478c-bd15-905f9f490f12" />
+
