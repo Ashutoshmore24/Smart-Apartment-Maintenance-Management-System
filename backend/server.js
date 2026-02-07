@@ -11,6 +11,7 @@ app.use(express.json());
 
 app.use("/api/requests", requestRoutes);
 app.use("/api/payments", paymentRoutes);
+app.use("/api/users", require("./routes/user.routes"));
 
 const PORT = 5000;
 app.listen(PORT, () => {

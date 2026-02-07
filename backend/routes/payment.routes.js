@@ -14,7 +14,7 @@ router.post("/", (req, res) => {
 
   db.query(sql, [amount, payment_mode, bill_id], (err, result) => {
     if (err) {
-      return res.status(500).json(err);
+      return res.status(500).json({ message: "Database error", sqlMessage: err.sqlMessage, code: err.code });
     }
     res.json({ message: "Payment added successfully" });
   });

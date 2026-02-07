@@ -1,14 +1,33 @@
-import Dashboard from "./pages/Dashboard";
-import AddPayment from "./pages/AddPayment";
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
+import Navbar from './components/Navbar';
+import LoginPage from './pages/LoginPage';
+import DashboardPage from './pages/DashboardPage';
+import PaymentPage from './pages/PaymentPage';
+import AboutPage from './pages/AboutPage';
+import AdminDashboard from './pages/AdminDashboard';
+import TechnicianDashboard from './pages/TechnicianDashboard';
 
 function App() {
   return (
-    <div style={{ padding: "20px" }}>
-      <h1>Smart Apartment Maintenance Management System</h1>
-      <Dashboard />
-      <hr />
-      <AddPayment />
-    </div>
+    <AuthProvider>
+      <Router>
+        <div className="min-h-screen bg-gray-50 font-sans text-gray-900 flex flex-col">
+          <Navbar />
+          <main className="flex-grow">
+            <Routes>
+              <Route path="/" element={<LoginPage />} />
+              <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/payments" element={<PaymentPage />} />
+              <Route path="/about" element={<AboutPage />} />
+              <Route path="/admin-dashboard" element={<AdminDashboard />} />
+              <Route path="/technician-dashboard" element={<TechnicianDashboard />} />
+            </Routes>
+          </main>
+        </div>
+      </Router>
+    </AuthProvider>
   );
 }
 
