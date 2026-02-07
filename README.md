@@ -17,6 +17,8 @@ Make sure the following are installed on your system:
 ### 2️⃣ Clone the Repository
 ```bash
 git clone https://github.com/Ashutoshmore24/Smart-Apartment-Maintenance-Management-System.git
+```
+```bash
 cd Smart-Apartment-Maintenance-Management-System
 ```
 
