@@ -87,15 +87,13 @@ npm install axios
 ```
 ---
 
+## ER Diagram : 
+<img width="1268" height="907" alt="image" src="https://github.com/user-attachments/assets/3f4e244d-cf91-4e09-8506-7e5a8bf6e882" />
+
+---
+
 ## Database Schema Overview : 
-
-<img width="1071" height="665" alt="image" src="https://github.com/user-attachments/assets/9c5a08f7-03fc-44f1-b7b0-55f9e1ecc366" />
-
----
-
-<img width="1052" height="822" alt="ER_BLOCK_DIAGRAM" src="https://github.com/user-attachments/assets/c404fb28-0ac4-4fbd-97af-bec5a1dbe22e" />
-
----
+ - comming soon
 
 
 
