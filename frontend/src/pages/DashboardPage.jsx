@@ -4,13 +4,32 @@ import { useAuth } from '../context/AuthContext';
 import RequestList from '../components/RequestList';
 import { Filter, RefreshCw, Plus, X } from 'lucide-react';
 
+
+
 const DashboardPage = () => {
     const { user, role } = useAuth();
     const [requests, setRequests] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('All');
     const [showModal, setShowModal] = useState(false);
-    const [newRequest, setNewRequest] = useState({ type: 'Plumbing', description: '' });
+    const [newRequest, setNewRequest] = useState({
+        type: 'Plumbing',
+        description: '',
+        category: 'FLAT',
+        asset_id: null
+      });
+      
+      const [assets, setAssets] = useState([]);
+
+      const fetchAssets = async () => {
+        try {
+          const res = await api.get('/assets');
+          setAssets(res.data);
+        } catch (err) {
+          console.error(err);
+        }
+      };
+      
 
     const fetchRequests = () => {
         setLoading(true);
@@ -34,25 +53,41 @@ const DashboardPage = () => {
 
     useEffect(() => {
         fetchRequests();
-    }, [user]);
+        fetchAssets();
+      }, [user]);
+      
 
-    const handleSubmitRequest = async (e) => {
+      const handleSubmitRequest = async (e) => {
         e.preventDefault();
         try {
             await api.post('/requests', {
                 resident_id: user.resident_id,
                 request_type: newRequest.type,
-                description: newRequest.description
+                description: newRequest.description,
+                request_category: newRequest.category,   // FLAT or ASSET
+                asset_id: newRequest.category === 'ASSET' 
+                    ? newRequest.asset_id 
+                    : null
             });
+    
             setShowModal(false);
             fetchRequests();
-            setNewRequest({ type: 'Plumbing', description: '' });
+    
+            // Reset form
+            setNewRequest({
+                type: 'Plumbing',
+                description: '',
+                category: 'FLAT',
+                asset_id: null
+            });
+    
             alert('Request submitted successfully!');
         } catch (error) {
             console.error(error);
             alert('Failed to submit request');
         }
     };
+    
 
     const filteredRequests = filter === 'All'
         ? requests
@@ -61,8 +96,8 @@ const DashboardPage = () => {
     if (!user) return <div className="p-10 text-center">Please login first.</div>;
 
     return (
-        <div className="max-w-7xl mx-auto px-6 py-8">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        <div className="px-6 py-8 mx-auto max-w-7xl">
+            <div className="flex flex-col items-start justify-between gap-4 mb-8 md:flex-row md:items-center">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900">Resident Dashboard</h1>
                     <p className="text-gray-600">Welcome, {user.name}. Track your requests.</p>
@@ -71,14 +106,14 @@ const DashboardPage = () => {
                 <div className="flex gap-3">
                     <button
                         onClick={() => setShowModal(true)}
-                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 shadow-sm"
+                        className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg shadow-sm hover:bg-blue-700"
                     >
                         <Plus size={16} />
                         New Request
                     </button>
                     <button
                         onClick={fetchRequests}
-                        className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 shadow-sm"
+                        className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50"
                     >
                         <RefreshCw size={16} />
                         Refresh
@@ -87,19 +122,19 @@ const DashboardPage = () => {
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                    <div className="text-gray-500 text-sm font-medium uppercase mb-1">Total Requests</div>
+            <div className="grid grid-cols-1 gap-6 mb-8 md:grid-cols-3">
+                <div className="p-6 bg-white border border-gray-100 shadow-sm rounded-xl">
+                    <div className="mb-1 text-sm font-medium text-gray-500 uppercase">Total Requests</div>
                     <div className="text-3xl font-bold text-gray-900">{requests.length}</div>
                 </div>
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                    <div className="text-gray-500 text-sm font-medium uppercase mb-1">Pending Actions</div>
+                <div className="p-6 bg-white border border-gray-100 shadow-sm rounded-xl">
+                    <div className="mb-1 text-sm font-medium text-gray-500 uppercase">Pending Actions</div>
                     <div className="text-3xl font-bold text-orange-600">
                         {requests.filter(r => r.status === 'Pending').length}
                     </div>
                 </div>
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                    <div className="text-gray-500 text-sm font-medium uppercase mb-1">Resolved</div>
+                <div className="p-6 bg-white border border-gray-100 shadow-sm rounded-xl">
+                    <div className="mb-1 text-sm font-medium text-gray-500 uppercase">Resolved</div>
                     <div className="text-3xl font-bold text-green-600">
                         {requests.filter(r => r.status === 'Completed').length}
                     </div>
@@ -107,7 +142,7 @@ const DashboardPage = () => {
             </div>
 
             {/* Filter Tabs */}
-            <div className="bg-white rounded-t-lg border-b border-gray-200 px-6 py-4 flex items-center gap-4">
+            <div className="flex items-center gap-4 px-6 py-4 bg-white border-b border-gray-200 rounded-t-lg">
                 <Filter size={18} className="text-gray-400" />
                 {['All', 'Pending', 'In Progress', 'Completed'].map(status => (
                     <button
@@ -127,17 +162,61 @@ const DashboardPage = () => {
 
             {/* New Request Modal */}
             {showModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg p-6 w-full max-w-md">
-                        <div className="flex justify-between items-center mb-4">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+                    <div className="w-full max-w-md p-6 bg-white rounded-lg">
+                        <div className="flex items-center justify-between mb-4">
                             <h3 className="text-lg font-bold">New Maintenance Request</h3>
                             <button onClick={() => setShowModal(false)} className="text-gray-500 hover:text-gray-700"><X size={20} /></button>
                         </div>
                         <form onSubmit={handleSubmitRequest} className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium mb-1">Request Type</label>
+                            <div>
+  <label className="block mb-1 text-sm font-medium">
+    Request Level
+  </label>
+  <select
+    className="w-full px-3 py-2 border rounded"
+    value={newRequest.category}
+    onChange={(e) =>
+      setNewRequest({
+        ...newRequest,
+        category: e.target.value,
+        asset_id: null
+      })
+    }
+  >
+    <option value="FLAT">Flat Level</option>
+    <option value="ASSET">Asset Level</option>
+  </select>
+</div>
+
+{newRequest.category === 'ASSET' && (
+  <div>
+    <label className="block mb-1 text-sm font-medium">
+      Select Asset
+    </label>
+    <select
+      className="w-full px-3 py-2 border rounded"
+      value={newRequest.asset_id || ''}
+      onChange={(e) =>
+        setNewRequest({ ...newRequest, asset_id: e.target.value })
+      }
+      required
+    >
+      <option value="">-- Select Asset --</option>
+      {assets.map(asset => (
+        <option key={asset.asset_id} value={asset.asset_id}>
+          {asset.asset_name}
+        </option>
+      ))}
+    </select>
+  </div>
+)}
+
+                                
+                                <label className="block mb-1 text-sm font-medium">Request Type</label>
                                 <select
-                                    className="w-full border rounded px-3 py-2"
+                                    className="w-full px-3 py-2 border rounded"
                                     value={newRequest.type}
                                     onChange={e => setNewRequest({ ...newRequest, type: e.target.value })}
                                 >
@@ -148,16 +227,16 @@ const DashboardPage = () => {
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium mb-1">Description (Optional)</label>
+                                <label className="block mb-1 text-sm font-medium">Description (Optional)</label>
                                 <textarea
-                                    className="w-full border rounded px-3 py-2"
+                                    className="w-full px-3 py-2 border rounded"
                                     rows="3"
                                     value={newRequest.description}
                                     onChange={e => setNewRequest({ ...newRequest, description: e.target.value })}
                                     placeholder="Describe the issue..."
                                 ></textarea>
                             </div>
-                            <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded font-medium hover:bg-blue-700">Submit Request</button>
+                            <button type="submit" className="w-full py-2 font-medium text-white bg-blue-600 rounded hover:bg-blue-700">Submit Request</button>
                         </form>
                     </div>
                 </div>

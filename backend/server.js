@@ -1,3 +1,5 @@
+const assetRoutes = require("./routes/asset.routes");
+
 const express = require("express");
 const cors = require("cors");
 
@@ -8,6 +10,8 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+
+app.use("/api/assets", assetRoutes);
 
 app.use("/api/requests", requestRoutes);
 app.use("/api/payments", paymentRoutes);

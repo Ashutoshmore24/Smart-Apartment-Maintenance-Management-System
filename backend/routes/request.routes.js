@@ -6,17 +6,23 @@ const router = express.Router();
 // Get all maintenance requests
 router.get("/", (req, res) => {
   const sql = `
-    SELECT mr.request_id,
-           r.name AS resident_name,
-           mr.request_type,
-           mr.status,
-           mr.description,
-           mr.request_date,
-           t.name AS technician_name,
-           mr.resident_id,
-           mr.technician_id
+    SELECT 
+      mr.request_id,
+      r.name AS resident_name,
+      mr.request_type,
+      mr.status,
+      mr.description,
+      mr.request_date,
+      mr.request_category,
+      f.flat_number,
+      a.asset_name,
+      t.name AS technician_name,
+      mr.resident_id,
+      mr.technician_id
     FROM maintenance_request mr
     JOIN resident r ON mr.resident_id = r.resident_id
+    LEFT JOIN flat f ON r.flat_id = f.flat_id
+    LEFT JOIN asset a ON mr.asset_id = a.asset_id
     LEFT JOIN technician t ON mr.technician_id = t.technician_id
   `;
 
@@ -28,18 +34,38 @@ router.get("/", (req, res) => {
   });
 });
 
+module.exports = router;
+
+
 // Create a new maintenance request
 router.post("/", (req, res) => {
-  const { resident_id, request_type, description } = req.body;
+  const {
+    resident_id,
+    request_type,
+    description,
+    request_category = "FLAT",
+    asset_id = null
+  } = req.body;
+
   const sql = `
-    INSERT INTO maintenance_request (resident_id, request_type, description, status, request_date) 
-    VALUES (?, ?, ?, 'Pending', CURDATE())
+    INSERT INTO maintenance_request 
+    (resident_id, request_type, description, status, request_date, request_category, asset_id) 
+    VALUES (?, ?, ?, 'Pending', CURDATE(), ?, ?)
   `;
-  db.query(sql, [resident_id, request_type, description], (err, result) => {
-    if (err) return res.status(500).json(err);
-    res.json({ message: "Request created successfully", id: result.insertId });
-  });
+
+  db.query(
+    sql,
+    [resident_id, request_type, description, request_category, asset_id],
+    (err, result) => {
+      if (err) return res.status(500).json(err);
+      res.json({
+        message: "Request created successfully",
+        id: result.insertId
+      });
+    }
+  );
 });
+
 
 // Update request status and assign technician
 router.put("/:id", (req, res) => {

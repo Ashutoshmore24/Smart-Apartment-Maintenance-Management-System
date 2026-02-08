@@ -5,7 +5,7 @@ import { Package, User, FileText, Activity } from 'lucide-react';
 const RequestList = ({ requests, loading }) => {
     if (loading) {
         return (
-            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 text-center text-gray-500">
+            <div className="p-6 text-center text-gray-500 bg-white border border-gray-100 rounded-lg shadow-sm">
                 Loading requests...
             </div>
         );
@@ -13,27 +13,33 @@ const RequestList = ({ requests, loading }) => {
 
     if (requests.length === 0) {
         return (
-            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 text-center text-gray-500">
+            <div className="p-6 text-center text-gray-500 bg-white border border-gray-100 rounded-lg shadow-sm">
                 No maintenance requests found.
             </div>
         );
     }
 
     return (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+        <div className="overflow-hidden bg-white border border-gray-100 rounded-lg shadow-sm">
             <div className="overflow-x-auto">
                 <table className="w-full text-sm text-left text-gray-600">
-                    <thead className="text-xs text-gray-700 uppercase bg-gray-50 border-b border-gray-100">
-                        <tr>
-                            <th className="px-6 py-3 font-semibold">ID</th>
-                            <th className="px-6 py-3 font-semibold">Resident</th>
-                            <th className="px-6 py-3 font-semibold">Request Type</th>
-                            <th className="px-6 py-3 font-semibold">Status</th>
-                        </tr>
+                    <thead className="text-xs text-gray-700 uppercase border-b border-gray-100 bg-gray-50">
+                        
+
+                            <tr>
+                                <th className="px-6 py-3 font-semibold">ID</th>
+                                <th className="px-6 py-3 font-semibold">Resident</th>
+                                <th className="px-6 py-3 font-semibold">Request Type</th>
+                                <th className="px-6 py-3 font-semibold">Category</th>
+                                <th className="px-6 py-3 font-semibold">Related To</th>
+                                <th className="px-6 py-3 font-semibold">Status</th>
+                            </tr>
+
+                      
                     </thead>
                     <tbody>
                         {requests.map((request) => (
-                            <tr key={request.request_id} className="bg-white border-b hover:bg-gray-50 transition-colors">
+                            <tr key={request.request_id} className="transition-colors bg-white border-b hover:bg-gray-50">
                                 <td className="px-6 py-4 font-medium text-gray-900 border-b border-gray-100">
                                     #{request.request_id}
                                 </td>
@@ -49,6 +55,27 @@ const RequestList = ({ requests, loading }) => {
                                         {request.request_type}
                                     </div>
                                 </td>
+                                <td className="px-6 py-4 border-b border-gray-100">
+  <span
+    className={`px-2 py-1 rounded-full text-xs font-semibold ${
+      request.request_category === "ASSET"
+        ? "bg-purple-100 text-purple-700"
+        : "bg-blue-100 text-blue-700"
+    }`}
+  >
+    {request.request_category}
+  </span>
+</td>
+
+<td className="px-6 py-4 border-b border-gray-100">
+  <div className="flex items-center gap-2">
+    <Package size={16} className="text-gray-400" />
+    {request.request_category === "ASSET"
+      ? request.asset_name
+      : `Flat ${request.flat_number}`}
+  </div>
+</td>
+
                                 <td className="px-6 py-4 border-b border-gray-100">
                                     <StatusBadge status={request.status} />
                                 </td>

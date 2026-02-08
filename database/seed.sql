@@ -35,3 +35,11 @@ INSERT INTO maintenance_bill
 (bill_month, base_charge, penalty_amount, due_date, flat_id)
 VALUES 
 ('July 2024', 1000, 0, DATE_ADD(CURDATE(), INTERVAL 10 DAY), 1);
+
+
+
+INSERT INTO asset 
+(asset_name, asset_type, brand, condition_status, location, apartment_id)
+VALUES
+('Lift A', 'Mechanical', 'Otis', 'Working', 'Block A', 1),
+('Generator', 'Electrical', 'Kirloskar', 'Working', 'Basement', 1);

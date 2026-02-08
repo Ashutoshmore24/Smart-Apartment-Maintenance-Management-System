@@ -75,3 +75,29 @@ CREATE TABLE payment (
     bill_id INT,
     FOREIGN KEY (bill_id) REFERENCES maintenance_bill(bill_id)
 );
+
+
+CREATE TABLE asset (
+    asset_id INT AUTO_INCREMENT PRIMARY KEY,
+    asset_name VARCHAR(100) NOT NULL,
+    asset_type VARCHAR(50),
+    brand VARCHAR(50),
+    model_number VARCHAR(50),
+    serial_number VARCHAR(50),
+    purchase_date DATE,
+    purchase_cost DECIMAL(10,2),
+    condition_status VARCHAR(30),
+    location VARCHAR(50),
+    apartment_id INT,
+    FOREIGN KEY (apartment_id) REFERENCES apartment(apartment_id)
+);
+
+
+-- Extend maintenance_request for categorization
+ALTER TABLE maintenance_request
+ADD request_category ENUM('FLAT', 'ASSET') NOT NULL DEFAULT 'FLAT';
+
+
+ALTER TABLE maintenance_request
+ADD asset_id INT NULL,
+ADD FOREIGN KEY (asset_id) REFERENCES asset(asset_id);
