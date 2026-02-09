@@ -32,9 +32,10 @@ const AdminDashboard = () => {
         if (!technicianId) return;
         try {
             await api.put(`/requests/${requestId}`, {
-                status: 'In Progress',
+                status: 'IN_PROGRESS',
                 technician_id: technicianId
             });
+
             fetchData(); // Refresh to show update
             alert('Technician assigned successfully!');
         } catch (error) {
@@ -44,12 +45,12 @@ const AdminDashboard = () => {
     };
 
     return (
-        <div className="max-w-7xl mx-auto px-6 py-8">
-            <h1 className="text-2xl font-bold text-gray-900 mb-6">Admin Dashboard</h1>
+        <div className="px-6 py-8 mx-auto max-w-7xl">
+            <h1 className="mb-6 text-2xl font-bold text-gray-900">Admin Dashboard</h1>
 
-            <div className="bg-white rounded-lg shadow overflow-hidden">
+            <div className="overflow-hidden bg-white rounded-lg shadow">
                 <table className="w-full text-sm text-left">
-                    <thead className="bg-gray-50 text-gray-700 uppercase">
+                    <thead className="text-gray-700 uppercase bg-gray-50">
                         <tr>
                             <th className="px-6 py-3">ID</th>
                             <th className="px-6 py-3">Resident</th>
@@ -75,19 +76,21 @@ const AdminDashboard = () => {
                                             <User size={14} /> {req.technician_name}
                                         </span>
                                     ) : (
-                                        <span className="text-gray-400 italic">Unassigned</span>
+                                        <span className="italic text-gray-400">Unassigned</span>
                                     )}
                                 </td>
                                 <td className="px-6 py-4">
-                                    {req.status !== 'Completed' && (
+                                    {req.status !== 'COMPLETED' && (
                                         <select
-                                            className="border rounded px-2 py-1 text-xs"
+                                            className="px-2 py-1 text-xs border rounded"
                                             onChange={(e) => handleAssign(req.request_id, e.target.value)}
                                             defaultValue=""
                                         >
                                             <option value="" disabled>Assign Tech</option>
                                             {technicians.map(t => (
-                                                <option key={t.technician_id} value={t.technician_id}>{t.name}</option>
+                                                <option key={t.technician_id} value={t.technician_id}>
+                                                    {t.name} ({t.specialization || 'General'})
+                                                </option>
                                             ))}
                                         </select>
                                     )}

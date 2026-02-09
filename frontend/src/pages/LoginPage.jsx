@@ -1,141 +1,123 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { loginResident, loginTechnician } from '../api'; // We might need new API methods for Tech/Admin
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import api from '../api';
-import { User, Shield, Wrench, ArrowRight } from 'lucide-react';
 
 const LoginPage = () => {
-    const [activeTab, setActiveTab] = useState('resident');
-    const [residents, setResidents] = useState([]);
-    const [technicians, setTechnicians] = useState([]);
-    const [selectedUser, setSelectedUser] = useState('');
-    const [adminPass, setAdminPass] = useState('');
+    const [formData, setFormData] = useState({
+        name: '',
+        id: '', // Changed to generic ID
+        role: 'resident' // Default role
+    });
     const [error, setError] = useState('');
-
-    const { login } = useAuth();
     const navigate = useNavigate();
+    const { login } = useAuth(); // Use context
 
-    useEffect(() => {
-        api.get('/users/residents').then(res => setResidents(res.data)).catch(console.error);
-        api.get('/users/technicians').then(res => setTechnicians(res.data)).catch(console.error);
-    }, []);
+    const handleChange = (e) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
 
-    const handleLogin = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
 
-        if (activeTab === 'admin') {
-            if (adminPass === 'admin') {
-                login({ name: 'Administrator', role: 'admin' }, 'admin');
-                navigate('/admin-dashboard');
-            } else {
-                setError('Invalid Password');
+        try {
+            let user = null;
+            let role = formData.role;
+
+            if (role === 'resident') {
+                const res = await loginResident({ name: formData.name, resident_id: formData.id });
+                user = res.data.user;
+                // Ensure resident_id is present for dashboard logic
+                user.resident_id = parseInt(user.resident_id || formData.id, 10);
+            } else if (role === 'admin') {
+                // TEMP: Hardcoded Admin for now as per "simple DB-based" request usually implies basic auth
+                // Or I should check if there is an admin table. 
+                // Schema doesn't show Admin table. Usually Admin is a special user or just hardcoded in academic projects.
+                if (formData.name === 'admin' && formData.id === 'admin123') {
+                    user = { name: 'Admin', role: 'admin' };
+                } else {
+                    throw new Error('Invalid Admin Credentials');
+                }
+            } else if (role === 'technician') {
+                const res = await loginTechnician({ name: formData.name, technician_id: formData.id });
+                user = res.data.user;
+                user.role = 'technician';
             }
-        } else if (activeTab === 'resident') {
-            const user = residents.find(r => r.resident_id == selectedUser);
+
+
             if (user) {
-                login(user, 'resident');
-                navigate('/dashboard');
-            } else {
-                setError('Please select a resident');
+                login(user, role);
+                if (role === 'resident') navigate('/dashboard');
+                if (role === 'admin') navigate('/admin-dashboard');
+                if (role === 'technician') navigate('/technician-dashboard');
             }
-        } else if (activeTab === 'technician') {
-            const user = technicians.find(t => t.technician_id == selectedUser);
-            if (user) {
-                login(user, 'technician');
-                navigate('/technician-dashboard');
-            } else {
-                setError('Please select a technician');
-            }
+
+        } catch (err) {
+            console.error(err);
+            setError(err.response?.data?.message || err.message || 'Login failed');
         }
     };
 
     return (
-        <div className="min-h-screen bg-gray-100 flex items-center justify-center p-6">
-            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
-                {/* Header */}
-                <div className="bg-blue-600 p-8 text-center">
-                    <h1 className="text-2xl font-bold text-white mb-2">Welcome Back</h1>
-                    <p className="text-blue-100">Smart Apartment Maintenance</p>
-                </div>
-
-                {/* Tabs */}
-                <div className="flex border-b border-gray-100">
-                    {[
-                        { id: 'resident', label: 'Resident', icon: User },
-                        { id: 'technician', label: 'Technician', icon: Wrench },
-                        { id: 'admin', label: 'Admin', icon: Shield }
-                    ].map(tab => (
-                        <button
-                            key={tab.id}
-                            onClick={() => { setActiveTab(tab.id); setSelectedUser(''); setError(''); }}
-                            className={`flex-1 py-4 text-sm font-medium flex flex-col items-center gap-1 transition-colors ${activeTab === tab.id ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                                }`}
+        <div className="flex items-center justify-center min-h-screen bg-gray-50">
+            <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-md">
+                <h2 className="mb-6 text-2xl font-bold text-center text-gray-800">Login</h2>
+                {error && <p className="mb-4 text-sm text-center text-red-500">{error}</p>}
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700">Role</label>
+                        <select
+                            name="role"
+                            value={formData.role}
+                            onChange={handleChange}
+                            className="w-full p-2 mt-1 border rounded focus:ring-blue-500 focus:border-blue-500"
                         >
-                            <tab.icon size={18} />
-                            {tab.label}
-                        </button>
-                    ))}
-                </div>
+                            <option value="resident">Resident</option>
+                            <option value="technician">Technician</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
 
-                {/* Form */}
-                <div className="p-8">
-                    <form onSubmit={handleLogin} className="space-y-6">
-                        {activeTab === 'resident' && (
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Select Name</label>
-                                <select
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                                    value={selectedUser}
-                                    onChange={e => setSelectedUser(e.target.value)}
-                                >
-                                    <option value="">-- Select Resident --</option>
-                                    {residents.map(r => (
-                                        <option key={r.resident_id} value={r.resident_id}>{r.name} (Flat {r.flat_id})</option>
-                                    ))}
-                                </select>
-                            </div>
-                        )}
-
-                        {activeTab === 'technician' && (
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Select Name</label>
-                                <select
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                                    value={selectedUser}
-                                    onChange={e => setSelectedUser(e.target.value)}
-                                >
-                                    <option value="">-- Select Technician --</option>
-                                    {technicians.map(t => (
-                                        <option key={t.technician_id} value={t.technician_id}>{t.name} ({t.specialization})</option>
-                                    ))}
-                                </select>
-                            </div>
-                        )}
-
-                        {activeTab === 'admin' && (
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
-                                <input
-                                    type="password"
-                                    placeholder="Enter password (admin)"
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                                    value={adminPass}
-                                    onChange={e => setAdminPass(e.target.value)}
-                                />
-                            </div>
-                        )}
-
-                        {error && <div className="text-red-500 text-sm">{error}</div>}
-
-                        <button
-                            type="submit"
-                            className="w-full py-3 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
-                        >
-                            Login as {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
-                            <ArrowRight size={18} />
-                        </button>
-                    </form>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700">
+                            {formData.role === 'admin' ? 'Username' : 'Name'}
+                        </label>
+                        <input
+                            type="text"
+                            name="name"
+                            placeholder={formData.role === 'admin' ? 'admin' : 'Full Name'}
+                            value={formData.name}
+                            onChange={handleChange}
+                            required
+                            className="w-full p-2 mt-1 border rounded focus:ring-blue-500 focus:border-blue-500"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700">
+                            {formData.role === 'admin' ? 'Password' : (formData.role === 'technician' ? 'Technician ID' : 'Resident ID')}
+                        </label>
+                        <input
+                            type={formData.role === 'admin' ? 'password' : 'text'}
+                            name="id"
+                            placeholder={formData.role === 'admin' ? 'admin123' : 'ID'}
+                            value={formData.id}
+                            onChange={handleChange}
+                            required
+                            className="w-full p-2 mt-1 border rounded focus:ring-blue-500 focus:border-blue-500"
+                        />
+                    </div>
+                    <button
+                        type="submit"
+                        className="w-full px-4 py-2 font-bold text-white bg-green-600 rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+                    >
+                        Login
+                    </button>
+                </form>
+                <div className="mt-4 text-center">
+                    {formData.role === 'resident' && (
+                        <Link to="/register" className="text-sm text-blue-600 hover:underline">Need an account? Register</Link>
+                    )}
                 </div>
             </div>
         </div>

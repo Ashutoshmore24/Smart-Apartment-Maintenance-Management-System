@@ -2,17 +2,20 @@ import React, { useState } from 'react';
 import api from '../api';
 import { CreditCard, CheckCircle, AlertCircle } from 'lucide-react';
 
-const PaymentForm = ({ onPaymentSuccess }) => {
-    const [billId, setBillId] = useState('');
-    const [amount, setAmount] = useState('');
+const PaymentForm = ({ request_id, flat_id, amount: initialAmount, onPaymentSuccess }) => {
+    const [billId, setBillId] = useState(request_id || '');
+    const [amount, setAmount] = useState(initialAmount || '');
     const [paymentMode, setPaymentMode] = useState('UPI');
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState(null);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!billId || !amount) {
-            setMessage({ type: 'error', text: 'Please fill in all fields.' });
+        // Use prop request_id if available, otherwise input billId
+        const finalRequestId = request_id || billId;
+
+        if (!finalRequestId) {
+            setMessage({ type: 'error', text: 'Bill ID is required.' });
             return;
         }
 
@@ -20,9 +23,9 @@ const PaymentForm = ({ onPaymentSuccess }) => {
         setMessage(null);
 
         try {
-            await api.post('/payments', {
-                bill_id: billId,
-                amount: amount,
+            await api.post('/payments/pay', { // Fixed endpoint path from /payments to /payments/pay
+                request_id: finalRequestId,
+                flat_id: flat_id,
                 payment_mode: paymentMode
             });
 

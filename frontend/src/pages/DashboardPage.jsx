@@ -17,19 +17,30 @@ const DashboardPage = () => {
         description: '',
         category: 'FLAT',
         asset_id: null
-      });
-      
-      const [assets, setAssets] = useState([]);
+    });
 
-      const fetchAssets = async () => {
+    const [assets, setAssets] = useState([]);
+    const [pendingPayments, setPendingPayments] = useState(0);
+
+    const fetchAssets = async () => {
         try {
-          const res = await api.get('/assets');
-          setAssets(res.data);
+            const res = await api.get('/assets');
+            setAssets(res.data);
         } catch (err) {
-          console.error(err);
+            console.error(err);
         }
-      };
-      
+    };
+
+    const fetchPendingBills = async () => {
+        if (!user || !user.resident_id) return;
+        try {
+            const res = await api.getPendingBills(user.resident_id); /* Updated to use resident_id */
+            setPendingPayments(res.data.length);
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
 
     const fetchRequests = () => {
         setLoading(true);
@@ -37,7 +48,7 @@ const DashboardPage = () => {
             .then(res => {
                 // Filter resident's requests only
                 if (role === 'resident' && user) {
-                    const myRequests = res.data.filter(r => r.resident_id === user.resident_id);
+                    const myRequests = res.data.filter(r => Number(r.resident_id) === Number(user.resident_id));
                     setRequests(myRequests);
                 } else {
                     // Fallback for demo or admin viewing this page
@@ -54,10 +65,11 @@ const DashboardPage = () => {
     useEffect(() => {
         fetchRequests();
         fetchAssets();
-      }, [user]);
-      
+        fetchPendingBills();
+    }, [user]);
 
-      const handleSubmitRequest = async (e) => {
+
+    const handleSubmitRequest = async (e) => {
         e.preventDefault();
         try {
             await api.post('/requests', {
@@ -65,14 +77,14 @@ const DashboardPage = () => {
                 request_type: newRequest.type,
                 description: newRequest.description,
                 request_category: newRequest.category,   // FLAT or ASSET
-                asset_id: newRequest.category === 'ASSET' 
-                    ? newRequest.asset_id 
+                asset_id: newRequest.category === 'ASSET'
+                    ? newRequest.asset_id
                     : null
             });
-    
+
             setShowModal(false);
             fetchRequests();
-    
+
             // Reset form
             setNewRequest({
                 type: 'Plumbing',
@@ -80,14 +92,14 @@ const DashboardPage = () => {
                 category: 'FLAT',
                 asset_id: null
             });
-    
+
             alert('Request submitted successfully!');
         } catch (error) {
             console.error(error);
             alert('Failed to submit request');
         }
     };
-    
+
 
     const filteredRequests = filter === 'All'
         ? requests
@@ -122,7 +134,7 @@ const DashboardPage = () => {
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 gap-6 mb-8 md:grid-cols-3">
+            <div className="grid grid-cols-1 gap-6 mb-8 md:grid-cols-4">
                 <div className="p-6 bg-white border border-gray-100 shadow-sm rounded-xl">
                     <div className="mb-1 text-sm font-medium text-gray-500 uppercase">Total Requests</div>
                     <div className="text-3xl font-bold text-gray-900">{requests.length}</div>
@@ -139,6 +151,12 @@ const DashboardPage = () => {
                         {requests.filter(r => r.status === 'Completed').length}
                     </div>
                 </div>
+                <div className="p-6 bg-white border border-gray-100 shadow-sm rounded-xl">
+                    <div className="mb-1 text-sm font-medium text-gray-500 uppercase">Pending Payments</div>
+                    <div className="text-3xl font-bold text-red-600">
+                        {pendingPayments}
+                    </div>
+                </div>
             </div>
 
             {/* Filter Tabs */}
@@ -149,8 +167,8 @@ const DashboardPage = () => {
                         key={status}
                         onClick={() => setFilter(status)}
                         className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${filter === status
-                                ? 'bg-blue-100 text-blue-700'
-                                : 'text-gray-600 hover:bg-gray-100'
+                            ? 'bg-blue-100 text-blue-700'
+                            : 'text-gray-600 hover:bg-gray-100'
                             }`}
                     >
                         {status}
@@ -170,50 +188,50 @@ const DashboardPage = () => {
                         </div>
                         <form onSubmit={handleSubmitRequest} className="space-y-4">
                             <div>
-                            <div>
-  <label className="block mb-1 text-sm font-medium">
-    Request Level
-  </label>
-  <select
-    className="w-full px-3 py-2 border rounded"
-    value={newRequest.category}
-    onChange={(e) =>
-      setNewRequest({
-        ...newRequest,
-        category: e.target.value,
-        asset_id: null
-      })
-    }
-  >
-    <option value="FLAT">Flat Level</option>
-    <option value="ASSET">Asset Level</option>
-  </select>
-</div>
+                                <div>
+                                    <label className="block mb-1 text-sm font-medium">
+                                        Request Level
+                                    </label>
+                                    <select
+                                        className="w-full px-3 py-2 border rounded"
+                                        value={newRequest.category}
+                                        onChange={(e) =>
+                                            setNewRequest({
+                                                ...newRequest,
+                                                category: e.target.value,
+                                                asset_id: null
+                                            })
+                                        }
+                                    >
+                                        <option value="FLAT">Flat Level</option>
+                                        <option value="ASSET">Asset Level</option>
+                                    </select>
+                                </div>
 
-{newRequest.category === 'ASSET' && (
-  <div>
-    <label className="block mb-1 text-sm font-medium">
-      Select Asset
-    </label>
-    <select
-      className="w-full px-3 py-2 border rounded"
-      value={newRequest.asset_id || ''}
-      onChange={(e) =>
-        setNewRequest({ ...newRequest, asset_id: e.target.value })
-      }
-      required
-    >
-      <option value="">-- Select Asset --</option>
-      {assets.map(asset => (
-        <option key={asset.asset_id} value={asset.asset_id}>
-          {asset.asset_name}
-        </option>
-      ))}
-    </select>
-  </div>
-)}
+                                {newRequest.category === 'ASSET' && (
+                                    <div>
+                                        <label className="block mb-1 text-sm font-medium">
+                                            Select Asset
+                                        </label>
+                                        <select
+                                            className="w-full px-3 py-2 border rounded"
+                                            value={newRequest.asset_id || ''}
+                                            onChange={(e) =>
+                                                setNewRequest({ ...newRequest, asset_id: e.target.value })
+                                            }
+                                            required
+                                        >
+                                            <option value="">-- Select Asset --</option>
+                                            {assets.map(asset => (
+                                                <option key={asset.asset_id} value={asset.asset_id}>
+                                                    {asset.asset_name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                )}
 
-                                
+
                                 <label className="block mb-1 text-sm font-medium">Request Type</label>
                                 <select
                                     className="w-full px-3 py-2 border rounded"

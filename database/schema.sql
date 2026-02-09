@@ -101,3 +101,35 @@ ADD request_category ENUM('FLAT', 'ASSET') NOT NULL DEFAULT 'FLAT';
 ALTER TABLE maintenance_request
 ADD asset_id INT NULL,
 ADD FOREIGN KEY (asset_id) REFERENCES asset(asset_id);
+
+
+-- Maintenance Request Based Billing Table
+
+CREATE TABLE maintenance_request_bill (
+  request_bill_id INT AUTO_INCREMENT PRIMARY KEY,
+  request_id INT NOT NULL UNIQUE,
+  flat_id INT NOT NULL,
+  amount DECIMAL(10,2) NOT NULL,
+  payment_status ENUM('PENDING','PAID') DEFAULT 'PENDING',
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  paid_at DATETIME,
+
+  CONSTRAINT fk_req_bill_request
+    FOREIGN KEY (request_id)
+    REFERENCES maintenance_request(request_id),
+
+  CONSTRAINT fk_req_bill_flat
+    FOREIGN KEY (flat_id)
+    REFERENCES flat(flat_id)
+);
+
+ALTER TABLE maintenance_request
+MODIFY status ENUM('PENDING','IN_PROGRESS','COMPLETED') NOT NULL DEFAULT 'PENDING';
+
+ALTER TABLE maintenance_request
+MODIFY description TEXT NOT NULL;
+
+
+ALTER TABLE maintenance_request
+ADD cost DECIMAL(10,2),
+ADD completed_at DATETIME;
