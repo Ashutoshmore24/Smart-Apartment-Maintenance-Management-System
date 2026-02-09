@@ -92,10 +92,15 @@ npm install axios
 
 ---
 
-## Database Schema Overview : (Initailly , not final ) 
-- Note :  This can be changed according further.
-  
-<img width="942" height="714" alt="image" src="https://github.com/user-attachments/assets/13d1bd7c-126f-48a8-9262-0dd587302233" />
+## Database Schema Overview :
+
+<img width="1102" height="606" alt="image" src="https://github.com/user-attachments/assets/4be60f5e-62cd-45f6-80af-573833e300ac" />
+
+---
+
+<img width="864" height="806" alt="image" src="https://github.com/user-attachments/assets/28b883b1-ad40-43a1-ae0c-e3f139a97048" />
+
+
 
 
 
