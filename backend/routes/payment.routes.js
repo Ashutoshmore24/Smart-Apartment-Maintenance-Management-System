@@ -80,4 +80,27 @@ router.post("/pay", (req, res) => {
   });
 });
 
+// ============================
+// Get payment history for a resident
+// ============================
+router.get("/history/:resident_id", (req, res) => {
+  const { resident_id } = req.params;
+
+  const sql = `
+    SELECT p.payment_id, p.payment_date, p.amount, 
+           r.request_id, r.request_type, r.request_category
+    FROM payment p
+    JOIN maintenance_request_bill b ON p.bill_id = b.request_bill_id
+    JOIN maintenance_request r ON b.request_id = r.request_id
+    WHERE r.resident_id = ?
+    ORDER BY p.payment_date DESC
+    LIMIT 10
+  `;
+
+  db.query(sql, [resident_id], (err, results) => {
+    if (err) return res.status(500).json(err);
+    res.json(results);
+  });
+});
+
 module.exports = router;

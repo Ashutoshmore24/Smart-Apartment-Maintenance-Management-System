@@ -24,6 +24,9 @@ export const getPendingBills = (resident_id) =>
 export const payMaintenanceBill = (data) =>
   api.post("/payments/pay", data);
 
+export const getPaymentHistory = (resident_id) =>
+  api.get(`/payments/history/${resident_id}`);
+
 /* ======================
    Auth
    ====================== */
