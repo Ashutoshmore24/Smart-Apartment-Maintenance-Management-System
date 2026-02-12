@@ -1,9 +1,74 @@
 # Smart-Apartment-Maintenance-Management-System
 Smart Apartment Maintenance Management System is a DBMS-based application that manages apartment maintenance requests, staff assignments, status tracking, and billing. It ensures structured data handling, faster issue resolution, and transparent maintenance workflows.
 
-## Folder Structure :
+## 📂 Folder Structure :
 
 <img width="364" height="988" alt="image" src="https://github.com/user-attachments/assets/0a36a368-68be-478c-bd15-905f9f490f12" />
+
+---
+
+## 🚀 Project Overview : 
+SmartStay simplifies apartment maintenance by providing:
+
+- Structured maintenance request handling
+- Transparent cost tracking
+- Role-based access control
+- Centralized database-driven workflow
+
+The system eliminates manual communication gaps and ensures accountability through a relational database backend.
+
+---
+
+## 🛠️ Tech Stack
+
+### Frontend
+- React (Vite)
+- Tailwind CSS
+- Lucide Icons
+- React Router
+
+### Backend
+- Node.js
+- Express.js
+
+### Database
+- MySQL
+
+---
+
+## 👥 User Roles
+
+### 🧑 Resident
+- Register & Login
+- Raise maintenance requests (Flat / Asset level)
+- Track request status
+- View pending maintenance payments
+- Pay maintenance bills
+
+### 🛠 Technician
+- View assigned tasks
+- Update request status
+- Enter maintenance cost on completion
+
+### 🛡 Admin
+- Manage users
+- Monitor all maintenance requests
+- Track system activity
+
+---
+
+## 🔐 Key Features
+
+- Role-based login system
+- Maintenance request validation
+- Mandatory cost entry before request completion
+- Automatic maintenance bill generation
+- Resident payment log tracking
+- Dashboard for each role
+- Dark / Light theme support & Responsive UI
+
+---
+
 
 ## 🚀 How to Run This Project (After Cloning)
 
