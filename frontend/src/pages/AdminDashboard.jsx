@@ -43,10 +43,43 @@ const AdminDashboard = () => {
             alert('Failed to assign technician');
         }
     };
+    const handleAutoAssign = async () => {
+        try {
+          const res = await api.post("/requests/auto-assign");
+          alert(res.data.message);
+            fetchData(); // refresh dashboard
+            alert('All the Technicians assigned successfully!');
+        } catch (error) {
+          console.error(error);
+          alert("Auto assignment failed");
+        }
+    };
+    
+    const hasUnassigned = requests.some(
+        r => !r.technician_id && r.status === 'PENDING'
+      );
+      
+      
 
     return (
         <div className="px-6 py-8 mx-auto max-w-7xl">
             <h1 className="mb-6 text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+            <div className="flex items-center justify-between mb-6">
+  <h1 className="text-2xl font-bold text-gray-900">All Requests</h1>
+
+  <button
+  onClick={handleAutoAssign}
+  disabled={!hasUnassigned}
+  className={`px-4 py-2 text-sm font-medium text-white rounded-md transition-colors
+    ${hasUnassigned ? 'bg-purple-600 hover:bg-purple-700' : 'bg-gray-400 cursor-not-allowed'}
+  `}
+>
+  Auto Assign Technician
+</button>
+
+</div>
+
+
 
             <div className="overflow-hidden bg-white rounded-lg shadow">
                 <table className="w-full text-sm text-left">
@@ -94,7 +127,7 @@ const AdminDashboard = () => {
                                             ))}
                                         </select>
                                     )}
-                                    {req.status === 'Completed' && <CheckCircle size={18} className="text-green-500" />}
+                                    {req.status === 'COMPLETED' && <CheckCircle size={18} className="text-green-500" />}
                                 </td>
                             </tr>
                         ))}

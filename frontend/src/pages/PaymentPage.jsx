@@ -31,6 +31,8 @@ const PaymentPage = () => {
 
     const handlePaymentSuccess = () => {
         fetchData();
+
+        window.dispatchEvent(new Event("payment-updated"));
     };
 
     return (
@@ -39,7 +41,7 @@ const PaymentPage = () => {
                 <h1 className="text-3xl font-bold text-gray-900">
                     Maintenance Payments
                 </h1>
-                <p className="text-gray-600 mt-2">
+                <p className="mt-2 text-gray-600">
                     Manage your maintenance bills and view payment history
                 </p>
             </div>
@@ -47,13 +49,13 @@ const PaymentPage = () => {
             <div className="grid items-start grid-cols-1 gap-8 lg:grid-cols-3">
 
                 {/* Left Column: Pending Bills */}
-                <div className="lg:col-span-2 space-y-6">
-                    <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
+                <div className="space-y-6 lg:col-span-2">
+                    <h2 className="flex items-center gap-2 text-xl font-semibold text-gray-800">
                         Pending Bills
                     </h2>
 
                     {bills.length === 0 && (
-                        <div className="p-8 text-center bg-gray-50 rounded-xl border border-dashed border-gray-300">
+                        <div className="p-8 text-center border border-gray-300 border-dashed bg-gray-50 rounded-xl">
                             <p className="text-gray-500">
                                 No pending maintenance payments 🎉
                             </p>
@@ -63,11 +65,11 @@ const PaymentPage = () => {
                     {bills.map((bill) => (
                         <div
                             key={bill.request_id}
-                            className="p-6 bg-white border rounded-xl shadow-sm"
+                            className="p-6 bg-white border shadow-sm rounded-xl"
                         >
-                            <div className="flex justify-between items-start mb-4">
+                            <div className="flex items-start justify-between mb-4">
                                 <div>
-                                    <p className="text-sm text-gray-500 mb-1">
+                                    <p className="mb-1 text-sm text-gray-500">
                                         Request ID: #{bill.request_id}
                                     </p>
                                     <h3 className="text-lg font-medium text-gray-900">

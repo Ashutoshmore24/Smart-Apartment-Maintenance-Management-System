@@ -171,6 +171,118 @@ router.put("/complete/:request_id", (req, res) => {
   });
 });
 
+// ============================
+// Resident Dashboard Statistics
+// ============================
+router.get("/stats/resident/:resident_id", (req, res) => {
+  const { resident_id } = req.params;
+
+  // 1. Request-based counters
+  const requestStatsSql = `
+    SELECT
+      COUNT(*) AS total_requests,
+      SUM(status IN ('PENDING','IN_PROGRESS')) AS pending_actions,
+      SUM(status = 'COMPLETED') AS resolved
+    FROM maintenance_request
+    WHERE resident_id = ?
+  `;
+
+  db.query(requestStatsSql, [resident_id], (err, reqStats) => {
+    if (err) return res.status(500).json(err);
+
+    const stats = reqStats[0];
+
+    // 2. Pending payments (request-based billing)
+    const paymentStatsSql = `
+      SELECT COUNT(*) AS pending_payments
+      FROM maintenance_request_bill
+      WHERE payment_status = 'PENDING'
+        AND flat_id = (
+          SELECT flat_id FROM resident WHERE resident_id = ?
+        )
+    `;
+
+    db.query(paymentStatsSql, [resident_id], (err2, payStats) => {
+      if (err2) return res.status(500).json(err2);
+
+      res.json({
+        total_requests: stats.total_requests || 0,
+        pending_actions: stats.pending_actions || 0,
+        resolved: stats.resolved || 0,
+        pending_payments: payStats[0].pending_payments || 0
+      });
+    });
+  });
+});
+
+// ============================
+// Auto Assign Technicians
+// ============================
+// ============================
+// Auto Assign Technicians (Stable Version)
+// ============================
+router.post("/auto-assign", (req, res) => {
+
+  const getUnassignedSql = `
+    SELECT request_id, request_type
+    FROM maintenance_request
+    WHERE technician_id IS NULL
+      AND status = 'PENDING'
+  `;
+
+  db.query(getUnassignedSql, (err, requests) => {
+    if (err) return res.status(500).json({ error: err.message });
+
+    if (requests.length === 0) {
+      return res.json({ message: "No unassigned requests found." });
+    }
+
+    let assignedCount = 0;
+
+    const assignNext = (index) => {
+      if (index >= requests.length) {
+        return res.json({
+          message: `${assignedCount} request(s) auto-assigned successfully.`
+        });
+      }
+
+      const request = requests[index];
+
+      const findTechSql = `
+        SELECT technician_id
+        FROM technician
+        WHERE specialization = ?
+        LIMIT 1
+      `;
+
+      db.query(findTechSql, [request.request_type], (err2, techs) => {
+
+        if (!err2 && techs.length > 0) {
+          const technician_id = techs[0].technician_id;
+
+          const updateSql = `
+            UPDATE maintenance_request
+            SET technician_id = ?, status = 'IN_PROGRESS'
+            WHERE request_id = ?
+          `;
+
+          db.query(updateSql, [technician_id, request.request_id], (err3) => {
+            if (!err3) assignedCount++;
+            assignNext(index + 1);
+          });
+
+        } else {
+          // No matching technician, skip
+          assignNext(index + 1);
+        }
+
+      });
+    };
+
+    assignNext(0);
+  });
+});
+
 
 
 module.exports = router;

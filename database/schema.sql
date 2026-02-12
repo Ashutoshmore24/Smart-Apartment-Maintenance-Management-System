@@ -92,6 +92,15 @@ CREATE TABLE asset (
     FOREIGN KEY (apartment_id) REFERENCES apartment(apartment_id)
 );
 
+INSERT INTO asset 
+(asset_name, asset_type, brand, model_number, serial_number, purchase_date, purchase_cost, condition_status, location, apartment_id)
+VALUES
+('Lift B', 'Mechanical', 'Otis', 'LFT-200', 'SN1002', '2022-05-01', 500000, 'Working', 'Block A', 1),
+('Generator 1', 'Electrical', 'Cummins', 'GEN-450', 'SN2001', '2021-03-15', 750000, 'Working', 'Basement', 1),
+('Water Pump', 'Plumbing', 'Kirloskar', 'WP-100', 'SN3001', '2023-01-10', 85000, 'Working', 'Pump Room', 1),
+('CCTV System', 'Security', 'Hikvision', 'CCTV-500', 'SN4001', '2022-08-20', 120000, 'Working', 'Main Gate', 1);
+
+
 
 -- Extend maintenance_request for categorization
 ALTER TABLE maintenance_request

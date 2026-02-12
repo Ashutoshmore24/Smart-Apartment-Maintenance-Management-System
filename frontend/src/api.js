@@ -27,6 +27,11 @@ export const payMaintenanceBill = (data) =>
 export const getPaymentHistory = (resident_id) =>
   api.get(`/payments/history/${resident_id}`);
 
+
+export const getResidentStats = (resident_id) =>
+  api.get(`/requests/stats/resident/${resident_id}`);
+
+
 /* ======================
    Auth
    ====================== */

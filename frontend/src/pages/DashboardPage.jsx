@@ -3,6 +3,26 @@ import api from '../api';
 import { useAuth } from '../context/AuthContext';
 import RequestList from '../components/RequestList';
 import { Filter, RefreshCw, Plus, X } from 'lucide-react';
+import { getResidentStats } from '../api';
+
+const flatTasks = [
+    "Plumbing",
+    "Electrical",
+    "Carpentry",
+    "Painting",
+    "HVAC",
+    "Appliance Repair",
+    "General Maintenance",
+    "Gardening"
+];
+
+const assetTasks = [
+    "Breakdown",
+    "Inspection",
+    "Noise Issue",
+    "Emergency Repair",
+    "Routine Maintenance"
+];
 
 
 
@@ -21,6 +41,22 @@ const DashboardPage = () => {
 
     const [assets, setAssets] = useState([]);
     const [pendingPayments, setPendingPayments] = useState(0);
+
+    const [stats, setStats] = useState({
+        total_requests: 0,
+        pending_actions: 0,
+        resolved: 0,
+        pending_payments: 0
+    });
+    
+      useEffect(() => {
+        if (user?.resident_id) {
+          getResidentStats(user.resident_id)
+            .then(res => setStats(res.data))
+            .catch(err => console.error(err));
+        }
+      }, [user]);
+            
 
     const fetchAssets = async () => {
         try {
@@ -69,6 +105,21 @@ const DashboardPage = () => {
     }, [user]);
 
 
+    const fetchStats = async () => {
+        if (!user?.resident_id) return;
+        try {
+          const res = await getResidentStats(user.resident_id);
+          setStats(res.data);
+        } catch (err) {
+          console.error(err);
+        }
+    };
+    useEffect(() => {
+        fetchStats();
+      }, [user]);
+      
+      
+
     const handleSubmitRequest = async (e) => {
         e.preventDefault();
         try {
@@ -84,6 +135,7 @@ const DashboardPage = () => {
 
             setShowModal(false);
             fetchRequests();
+            fetchStats(); 
 
             // Reset form
             setNewRequest({
@@ -100,6 +152,18 @@ const DashboardPage = () => {
         }
     };
 
+    useEffect(() => {
+        const handlePaymentUpdate = () => {
+            fetchStats();
+        };
+    
+        window.addEventListener("payment-updated", handlePaymentUpdate);
+    
+        return () => {
+            window.removeEventListener("payment-updated", handlePaymentUpdate);
+        };
+    }, []);
+    
 
     const filteredRequests = filter === 'All'
         ? requests
@@ -137,32 +201,36 @@ const DashboardPage = () => {
             <div className="grid grid-cols-1 gap-6 mb-8 md:grid-cols-4">
                 <div className="p-6 bg-white border border-gray-100 shadow-sm rounded-xl">
                     <div className="mb-1 text-sm font-medium text-gray-500 uppercase">Total Requests</div>
-                    <div className="text-3xl font-bold text-gray-900">{requests.length}</div>
+                    <div className="text-3xl font-bold text-gray-900">
+  {stats.total_requests}
+</div>
                 </div>
                 <div className="p-6 bg-white border border-gray-100 shadow-sm rounded-xl">
                     <div className="mb-1 text-sm font-medium text-gray-500 uppercase">Pending Actions</div>
                     <div className="text-3xl font-bold text-orange-600">
-                        {requests.filter(r => r.status === 'Pending').length}
-                    </div>
+  {stats.pending_actions}
+</div>
                 </div>
                 <div className="p-6 bg-white border border-gray-100 shadow-sm rounded-xl">
                     <div className="mb-1 text-sm font-medium text-gray-500 uppercase">Resolved</div>
-                    <div className="text-3xl font-bold text-green-600">
-                        {requests.filter(r => r.status === 'Completed').length}
-                    </div>
+                   
+<div className="text-3xl font-bold text-green-600">
+  {stats.resolved}
+</div>
                 </div>
                 <div className="p-6 bg-white border border-gray-100 shadow-sm rounded-xl">
                     <div className="mb-1 text-sm font-medium text-gray-500 uppercase">Pending Payments</div>
-                    <div className="text-3xl font-bold text-red-600">
-                        {pendingPayments}
-                    </div>
+                    
+<div className="text-3xl font-bold text-red-600">
+  {stats.pending_payments}
+</div>
                 </div>
             </div>
 
             {/* Filter Tabs */}
             <div className="flex items-center gap-4 px-6 py-4 bg-white border-b border-gray-200 rounded-t-lg">
                 <Filter size={18} className="text-gray-400" />
-                {['All', 'Pending', 'In Progress', 'Completed'].map(status => (
+                {['All', 'PENDING', 'IN_PROGRESS', 'COMPLETED'].map(status => (
                     <button
                         key={status}
                         onClick={() => setFilter(status)}
@@ -232,17 +300,19 @@ const DashboardPage = () => {
                                 )}
 
 
-                                <label className="block mb-1 text-sm font-medium">Request Type</label>
-                                <select
-                                    className="w-full px-3 py-2 border rounded"
-                                    value={newRequest.type}
-                                    onChange={e => setNewRequest({ ...newRequest, type: e.target.value })}
-                                >
-                                    <option value="Plumbing">Plumbing</option>
-                                    <option value="Electrical">Electrical</option>
-                                    <option value="Carpentry">Carpentry</option>
-                                    <option value="Other">Other</option>
-                                </select>
+<label className="block mb-1 text-sm font-medium">Request Type</label>
+<select
+    className="w-full px-3 py-2 border rounded"
+    value={newRequest.type}
+    onChange={e => setNewRequest({ ...newRequest, type: e.target.value })}
+>
+    {(newRequest.category === "FLAT" ? flatTasks : assetTasks).map(task => (
+        <option key={task} value={task}>
+            {task}
+        </option>
+    ))}
+</select>
+
                             </div>
                             <div>
                                 <label className="block mb-1 text-sm font-medium">Description (Optional)</label>

@@ -29,9 +29,8 @@ router.get("/pending/:resident_id", (req, res) => {
 router.post("/pay", (req, res) => {
   const { request_id, flat_id, payment_mode } = req.body;
 
-  // 1️⃣ Validate bill exists and belongs to flat
   const checkSql = `
-    SELECT request_bill_id
+    SELECT request_bill_id, amount
     FROM maintenance_request_bill
     WHERE request_id = ?
       AND flat_id = ?
@@ -48,34 +47,51 @@ router.post("/pay", (req, res) => {
     }
 
     const bill_id = rows[0].request_bill_id;
+    const amount = rows[0].amount;
 
-    // 2️⃣ Insert payment
-    const paySql = `
-      INSERT INTO payment (payment_date, amount, payment_mode, bill_id)
-      VALUES (CURDATE(),
-        (SELECT amount FROM maintenance_request_bill WHERE request_bill_id = ?),
-        ?, ?
-      )
-    `;
+    db.beginTransaction(err => {
+      if (err) return res.status(500).json(err);
 
-    db.query(paySql, [bill_id, payment_mode, bill_id], (err2) => {
-      if (err2) {
-        return res.status(500).json({
-          message: "Payment failed",
-          sqlMessage: err2.sqlMessage
+      // 1️⃣ Insert payment
+      const paySql = `
+        INSERT INTO payment (payment_date, amount, payment_mode, bill_id)
+        VALUES (CURDATE(), ?, ?, ?)
+      `;
+
+      db.query(paySql, [amount, payment_mode, bill_id], err2 => {
+        if (err2) {
+          return db.rollback(() =>
+            res.status(500).json({ message: "Payment failed" })
+          );
+        }
+
+        // 2️⃣ Update bill status
+        const updateSql = `
+          UPDATE maintenance_request_bill
+          SET payment_status = 'PAID',
+              paid_at = NOW()
+          WHERE request_bill_id = ?
+        `;
+
+        db.query(updateSql, [bill_id], err3 => {
+          if (err3) {
+            return db.rollback(() =>
+              res.status(500).json({ message: "Failed to update bill status" })
+            );
+          }
+
+          db.commit(err4 => {
+            if (err4) {
+              return db.rollback(() =>
+                res.status(500).json({ message: "Commit failed" })
+              );
+            }
+
+            // ✅ Respond ONLY after DB is consistent
+            res.json({ message: "Payment successful" });
+          });
         });
-      }
-
-      // 3️⃣ Mark bill as PAID
-      db.query(
-        `UPDATE maintenance_request_bill
-         SET payment_status = 'PAID',
-             paid_at = NOW()
-         WHERE request_bill_id = ?`,
-        [bill_id]
-      );
-
-      res.json({ message: "Payment successful" });
+      });
     });
   });
 });
