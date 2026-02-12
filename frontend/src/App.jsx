@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import RegisterPage from './pages/RegisterPage';
+import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import PaymentPage from './pages/PaymentPage';
@@ -14,11 +15,12 @@ function App() {
   return (
     <AuthProvider>
       <Router>
-        <div className="min-h-screen bg-gray-50 font-sans text-gray-900 flex flex-col">
+        <div className="flex flex-col min-h-screen font-sans text-gray-900 bg-gray-50">
           <Navbar />
           <main className="flex-grow">
             <Routes>
-              <Route path="/" element={<Navigate to="/login" />} />
+            <Route path="/" element={<LandingPage />} />
+
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/dashboard" element={<DashboardPage />} />
