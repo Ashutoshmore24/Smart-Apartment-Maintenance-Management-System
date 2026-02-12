@@ -48,15 +48,15 @@ const DashboardPage = () => {
         resolved: 0,
         pending_payments: 0
     });
-    
-      useEffect(() => {
+
+    useEffect(() => {
         if (user?.resident_id) {
-          getResidentStats(user.resident_id)
-            .then(res => setStats(res.data))
-            .catch(err => console.error(err));
+            getResidentStats(user.resident_id)
+                .then(res => setStats(res.data))
+                .catch(err => console.error(err));
         }
-      }, [user]);
-            
+    }, [user]);
+
 
     const fetchAssets = async () => {
         try {
@@ -108,17 +108,17 @@ const DashboardPage = () => {
     const fetchStats = async () => {
         if (!user?.resident_id) return;
         try {
-          const res = await getResidentStats(user.resident_id);
-          setStats(res.data);
+            const res = await getResidentStats(user.resident_id);
+            setStats(res.data);
         } catch (err) {
-          console.error(err);
+            console.error(err);
         }
     };
     useEffect(() => {
         fetchStats();
-      }, [user]);
-      
-      
+    }, [user]);
+
+
 
     const handleSubmitRequest = async (e) => {
         e.preventDefault();
@@ -135,7 +135,7 @@ const DashboardPage = () => {
 
             setShowModal(false);
             fetchRequests();
-            fetchStats(); 
+            fetchStats();
 
             // Reset form
             setNewRequest({
@@ -156,14 +156,14 @@ const DashboardPage = () => {
         const handlePaymentUpdate = () => {
             fetchStats();
         };
-    
+
         window.addEventListener("payment-updated", handlePaymentUpdate);
-    
+
         return () => {
             window.removeEventListener("payment-updated", handlePaymentUpdate);
         };
     }, []);
-    
+
 
     const filteredRequests = filter === 'All'
         ? requests
@@ -175,8 +175,8 @@ const DashboardPage = () => {
         <div className="px-6 py-8 mx-auto max-w-7xl">
             <div className="flex flex-col items-start justify-between gap-4 mb-8 md:flex-row md:items-center">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Resident Dashboard</h1>
-                    <p className="text-gray-600">Welcome, {user.name}. Track your requests.</p>
+                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Resident Dashboard</h1>
+                    <p className="text-gray-600 dark:text-gray-300">Welcome, {user.name}. Track your requests.</p>
                 </div>
 
                 <div className="flex gap-3">
@@ -189,7 +189,7 @@ const DashboardPage = () => {
                     </button>
                     <button
                         onClick={fetchRequests}
-                        className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50"
+                        className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-700"
                     >
                         <RefreshCw size={16} />
                         Refresh
@@ -199,44 +199,44 @@ const DashboardPage = () => {
 
             {/* Stats Cards */}
             <div className="grid grid-cols-1 gap-6 mb-8 md:grid-cols-4">
-                <div className="p-6 bg-white border border-gray-100 shadow-sm rounded-xl">
-                    <div className="mb-1 text-sm font-medium text-gray-500 uppercase">Total Requests</div>
-                    <div className="text-3xl font-bold text-gray-900">
-  {stats.total_requests}
-</div>
+                <div className="p-6 bg-white border border-gray-100 shadow-sm rounded-xl dark:bg-gray-800 dark:border-gray-700">
+                    <div className="mb-1 text-sm font-medium text-gray-500 uppercase dark:text-gray-400">Total Requests</div>
+                    <div className="text-3xl font-bold text-gray-900 dark:text-white">
+                        {stats.total_requests}
+                    </div>
                 </div>
-                <div className="p-6 bg-white border border-gray-100 shadow-sm rounded-xl">
-                    <div className="mb-1 text-sm font-medium text-gray-500 uppercase">Pending Actions</div>
+                <div className="p-6 bg-white border border-gray-100 shadow-sm rounded-xl dark:bg-gray-800 dark:border-gray-700">
+                    <div className="mb-1 text-sm font-medium text-gray-500 uppercase dark:text-gray-400">Pending Actions</div>
                     <div className="text-3xl font-bold text-orange-600">
-  {stats.pending_actions}
-</div>
+                        {stats.pending_actions}
+                    </div>
                 </div>
-                <div className="p-6 bg-white border border-gray-100 shadow-sm rounded-xl">
-                    <div className="mb-1 text-sm font-medium text-gray-500 uppercase">Resolved</div>
-                   
-<div className="text-3xl font-bold text-green-600">
-  {stats.resolved}
-</div>
+                <div className="p-6 bg-white border border-gray-100 shadow-sm rounded-xl dark:bg-gray-800 dark:border-gray-700">
+                    <div className="mb-1 text-sm font-medium text-gray-500 uppercase dark:text-gray-400">Resolved</div>
+
+                    <div className="text-3xl font-bold text-green-600">
+                        {stats.resolved}
+                    </div>
                 </div>
-                <div className="p-6 bg-white border border-gray-100 shadow-sm rounded-xl">
-                    <div className="mb-1 text-sm font-medium text-gray-500 uppercase">Pending Payments</div>
-                    
-<div className="text-3xl font-bold text-red-600">
-  {stats.pending_payments}
-</div>
+                <div className="p-6 bg-white border border-gray-100 shadow-sm rounded-xl dark:bg-gray-800 dark:border-gray-700">
+                    <div className="mb-1 text-sm font-medium text-gray-500 uppercase dark:text-gray-400">Pending Payments</div>
+
+                    <div className="text-3xl font-bold text-red-600">
+                        {stats.pending_payments}
+                    </div>
                 </div>
             </div>
 
             {/* Filter Tabs */}
-            <div className="flex items-center gap-4 px-6 py-4 bg-white border-b border-gray-200 rounded-t-lg">
+            <div className="flex items-center gap-4 px-6 py-4 bg-white border-b border-gray-200 rounded-t-lg dark:bg-gray-800 dark:border-gray-700">
                 <Filter size={18} className="text-gray-400" />
                 {['All', 'PENDING', 'IN_PROGRESS', 'COMPLETED'].map(status => (
                     <button
                         key={status}
                         onClick={() => setFilter(status)}
                         className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${filter === status
-                            ? 'bg-blue-100 text-blue-700'
-                            : 'text-gray-600 hover:bg-gray-100'
+                            ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200'
+                            : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'
                             }`}
                     >
                         {status}
@@ -249,19 +249,19 @@ const DashboardPage = () => {
             {/* New Request Modal */}
             {showModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-                    <div className="w-full max-w-md p-6 bg-white rounded-lg">
+                    <div className="w-full max-w-md p-6 bg-white rounded-lg dark:bg-gray-800">
                         <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-bold">New Maintenance Request</h3>
-                            <button onClick={() => setShowModal(false)} className="text-gray-500 hover:text-gray-700"><X size={20} /></button>
+                            <h3 className="text-lg font-bold dark:text-white">New Maintenance Request</h3>
+                            <button onClick={() => setShowModal(false)} className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"><X size={20} /></button>
                         </div>
                         <form onSubmit={handleSubmitRequest} className="space-y-4">
                             <div>
                                 <div>
-                                    <label className="block mb-1 text-sm font-medium">
+                                    <label className="block mb-1 text-sm font-medium dark:text-gray-200">
                                         Request Level
                                     </label>
                                     <select
-                                        className="w-full px-3 py-2 border rounded"
+                                        className="w-full px-3 py-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                                         value={newRequest.category}
                                         onChange={(e) =>
                                             setNewRequest({
@@ -278,11 +278,11 @@ const DashboardPage = () => {
 
                                 {newRequest.category === 'ASSET' && (
                                     <div>
-                                        <label className="block mb-1 text-sm font-medium">
+                                        <label className="block mb-1 text-sm font-medium dark:text-gray-200">
                                             Select Asset
                                         </label>
                                         <select
-                                            className="w-full px-3 py-2 border rounded"
+                                            className="w-full px-3 py-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                                             value={newRequest.asset_id || ''}
                                             onChange={(e) =>
                                                 setNewRequest({ ...newRequest, asset_id: e.target.value })
@@ -300,24 +300,24 @@ const DashboardPage = () => {
                                 )}
 
 
-<label className="block mb-1 text-sm font-medium">Request Type</label>
-<select
-    className="w-full px-3 py-2 border rounded"
-    value={newRequest.type}
-    onChange={e => setNewRequest({ ...newRequest, type: e.target.value })}
->
-    {(newRequest.category === "FLAT" ? flatTasks : assetTasks).map(task => (
-        <option key={task} value={task}>
-            {task}
-        </option>
-    ))}
-</select>
+                                <label className="block mb-1 text-sm font-medium dark:text-gray-200">Request Type</label>
+                                <select
+                                    className="w-full px-3 py-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                    value={newRequest.type}
+                                    onChange={e => setNewRequest({ ...newRequest, type: e.target.value })}
+                                >
+                                    {(newRequest.category === "FLAT" ? flatTasks : assetTasks).map(task => (
+                                        <option key={task} value={task}>
+                                            {task}
+                                        </option>
+                                    ))}
+                                </select>
 
                             </div>
                             <div>
-                                <label className="block mb-1 text-sm font-medium">Description (Optional)</label>
+                                <label className="block mb-1 text-sm font-medium dark:text-gray-200">Description (Optional)</label>
                                 <textarea
-                                    className="w-full px-3 py-2 border rounded"
+                                    className="w-full px-3 py-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                                     rows="3"
                                     value={newRequest.description}
                                     onChange={e => setNewRequest({ ...newRequest, description: e.target.value })}

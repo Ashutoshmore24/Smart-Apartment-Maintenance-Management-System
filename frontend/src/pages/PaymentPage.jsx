@@ -38,10 +38,10 @@ const PaymentPage = () => {
     return (
         <div className="max-w-6xl px-6 py-12 mx-auto">
             <div className="mb-8">
-                <h1 className="text-3xl font-bold text-gray-900">
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
                     Maintenance Payments
                 </h1>
-                <p className="mt-2 text-gray-600">
+                <p className="mt-2 text-gray-600 dark:text-gray-400">
                     Manage your maintenance bills and view payment history
                 </p>
             </div>
@@ -50,7 +50,7 @@ const PaymentPage = () => {
 
                 {/* Left Column: Pending Bills */}
                 <div className="space-y-6 lg:col-span-2">
-                    <h2 className="flex items-center gap-2 text-xl font-semibold text-gray-800">
+                    <h2 className="flex items-center gap-2 text-xl font-semibold text-gray-800 dark:text-white">
                         Pending Bills
                     </h2>
 
@@ -65,22 +65,22 @@ const PaymentPage = () => {
                     {bills.map((bill) => (
                         <div
                             key={bill.request_id}
-                            className="p-6 bg-white border shadow-sm rounded-xl"
+                            className="p-6 bg-white border shadow-sm rounded-xl dark:bg-gray-800 dark:border-gray-700"
                         >
                             <div className="flex items-start justify-between mb-4">
                                 <div>
-                                    <p className="mb-1 text-sm text-gray-500">
+                                    <p className="mb-1 text-sm text-gray-500 dark:text-gray-400">
                                         Request ID: #{bill.request_id}
                                     </p>
-                                    <h3 className="text-lg font-medium text-gray-900">
+                                    <h3 className="text-lg font-medium text-gray-900 dark:text-white">
                                         {bill.request_type}
                                     </h3>
-                                    <p className="text-sm text-gray-600">
+                                    <p className="text-sm text-gray-600 dark:text-gray-300">
                                         {bill.description}
                                     </p>
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-2xl font-bold text-gray-900">
+                                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
                                         ₹{bill.amount}
                                     </p>
                                 </div>
@@ -101,13 +101,13 @@ const PaymentPage = () => {
                     <RecentPayments payments={paymentHistory} />
 
                     {/* Info Section */}
-                    <div className="p-6 border border-blue-100 bg-blue-50 rounded-xl">
-                        <h3 className="flex items-center gap-2 mb-4 text-lg font-semibold text-blue-900">
+                    <div className="p-6 border border-blue-100 bg-blue-50 rounded-xl dark:bg-gray-800 dark:border-gray-700">
+                        <h3 className="flex items-center gap-2 mb-4 text-lg font-semibold text-blue-900 dark:text-blue-400">
                             <History size={20} />
                             Payment Information
                         </h3>
 
-                        <ul className="space-y-3 text-sm text-blue-800">
+                        <ul className="space-y-3 text-sm text-blue-800 dark:text-blue-300">
                             <li className="flex gap-2">
                                 <span>•</span> Payments are generated only after request completion
                             </li>

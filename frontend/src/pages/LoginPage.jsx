@@ -60,18 +60,18 @@ const LoginPage = () => {
     };
 
     return (
-        <div className="flex items-center justify-center min-h-screen bg-gray-50">
-            <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-md">
-                <h2 className="mb-6 text-2xl font-bold text-center text-gray-800">Login</h2>
+        <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
+            <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-md dark:bg-gray-800 dark:border dark:border-gray-700">
+                <h2 className="mb-6 text-2xl font-bold text-center text-gray-800 dark:text-white">Login</h2>
                 {error && <p className="mb-4 text-sm text-center text-red-500">{error}</p>}
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Role</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Role</label>
                         <select
                             name="role"
                             value={formData.role}
                             onChange={handleChange}
-                            className="w-full p-2 mt-1 border rounded focus:ring-blue-500 focus:border-blue-500"
+                            className="w-full p-2 mt-1 border rounded focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-blue-400"
                         >
                             <option value="resident">Resident</option>
                             <option value="technician">Technician</option>
@@ -80,7 +80,7 @@ const LoginPage = () => {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                             {formData.role === 'admin' ? 'Username' : 'Name'}
                         </label>
                         <input
@@ -90,11 +90,11 @@ const LoginPage = () => {
                             value={formData.name}
                             onChange={handleChange}
                             required
-                            className="w-full p-2 mt-1 border rounded focus:ring-blue-500 focus:border-blue-500"
+                            className="w-full p-2 mt-1 border rounded focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-blue-400"
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                             {formData.role === 'admin' ? 'Password' : (formData.role === 'technician' ? 'Technician ID' : 'Resident ID')}
                         </label>
                         <input
@@ -104,19 +104,19 @@ const LoginPage = () => {
                             value={formData.id}
                             onChange={handleChange}
                             required
-                            className="w-full p-2 mt-1 border rounded focus:ring-blue-500 focus:border-blue-500"
+                            className="w-full p-2 mt-1 border rounded focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-blue-400"
                         />
                     </div>
                     <button
                         type="submit"
-                        className="w-full px-4 py-2 font-bold text-white bg-green-600 rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+                        className="w-full px-4 py-2 font-bold text-white bg-green-600 rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-green-700 dark:hover:bg-green-600"
                     >
                         Login
                     </button>
                 </form>
                 <div className="mt-4 text-center">
                     {formData.role === 'resident' && (
-                        <Link to="/register" className="text-sm text-blue-600 hover:underline">Need an account? Register</Link>
+                        <Link to="/register" className="text-sm text-blue-600 hover:underline dark:text-blue-400">Need an account? Register</Link>
                     )}
                 </div>
             </div>
