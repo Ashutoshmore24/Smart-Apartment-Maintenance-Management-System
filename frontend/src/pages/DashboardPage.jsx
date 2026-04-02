@@ -1,0 +1,293 @@
+import React, { useEffect, useState } from 'react';
+import api from '../api';
+import { useAuth } from '../context/AuthContext';
+import RequestList from '../components/RequestList';
+import { Filter, RefreshCw, Plus, X } from 'lucide-react';
+import { getResidentStats } from '../api';
+
+const flatTasks = [
+    "Plumbing",
+    "Electrical",
+    "Carpentry",
+    "Painting",
+    "HVAC",
+    "Appliance Repair",
+    "General Maintenance",
+    "Gardening"
+];
+
+const assetTasks = [
+    "Breakdown",
+    "Inspection",
+    "Noise Issue",
+    "Emergency Repair",
+    "Routine Maintenance"
+];
+
+const DashboardPage = () => {
+    const { user, role } = useAuth();
+    const [requests, setRequests] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [filter, setFilter] = useState('All');
+    const [showModal, setShowModal] = useState(false);
+    const [newRequest, setNewRequest] = useState({
+        type: 'Plumbing',
+        description: '',
+        category: 'FLAT',
+        asset_id: null
+    });
+
+    const [assets, setAssets] = useState([]);
+
+    const [stats, setStats] = useState({
+        total_requests: 0,
+        pending_actions: 0,
+        resolved: 0,
+        pending_payments: 0
+    });
+
+    const fetchStats = async () => {
+        if (!user?.resident_id) return;
+        try {
+            const res = await getResidentStats(user.resident_id);
+            setStats(res.data);
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const fetchAssets = async () => {
+        try {
+            const res = await api.get('/assets');
+            setAssets(res.data);
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const fetchRequests = () => {
+        setLoading(true);
+        api.get("/requests")
+            .then(res => {
+                if (role === 'resident' && user) {
+                    const myRequests = res.data.filter(r => Number(r.resident_id) === Number(user.resident_id));
+                    setRequests(myRequests);
+                } else {
+                    setRequests(res.data);
+                }
+                setLoading(false);
+            })
+            .catch(err => {
+                console.error(err);
+                setLoading(false);
+            });
+    };
+
+    useEffect(() => {
+        fetchRequests();
+        fetchAssets();
+        fetchStats();
+    }, [user]);
+
+    useEffect(() => {
+        const handlePaymentUpdate = () => {
+            fetchStats();
+        };
+        window.addEventListener("payment-updated", handlePaymentUpdate);
+        return () => {
+            window.removeEventListener("payment-updated", handlePaymentUpdate);
+        };
+    }, []);
+
+    const handleSubmitRequest = async (e) => {
+        e.preventDefault();
+        try {
+            await api.post('/requests', {
+                resident_id: user.resident_id,
+                request_type: newRequest.type,
+                description: newRequest.description,
+                request_category: newRequest.category,
+                asset_id: newRequest.category === 'ASSET' ? newRequest.asset_id : null
+            });
+
+            setShowModal(false);
+            fetchRequests();
+            fetchStats();
+            setNewRequest({
+                type: 'Plumbing',
+                description: '',
+                category: 'FLAT',
+                asset_id: null
+            });
+            alert('Request submitted successfully!');
+        } catch (error) {
+            console.error(error);
+            alert('Failed to submit request');
+        }
+    };
+
+    const filteredRequests = filter === 'All' ? requests : requests.filter(r => r.status === filter);
+
+    if (!user) return (
+        <div className="p-10 text-center text-gray-500 dark:text-gray-400">Please login first.</div>
+    );
+
+    return (
+        <div className="px-6 py-8 mx-auto max-w-7xl">
+            {/* Header */}
+            <div className="flex flex-col items-start justify-between gap-4 mb-8 md:flex-row md:items-center">
+                <div>
+                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Resident Dashboard</h1>
+                    <p className="text-gray-600 dark:text-gray-300">Welcome, {user.name}. Track your requests.</p>
+                </div>
+
+                <div className="flex gap-3">
+                    <button
+                        onClick={() => setShowModal(true)}
+                        className="flex items-center gap-2 px-5 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg shadow hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600"
+                    >
+                        <Plus size={16} />
+                        New Request
+                    </button>
+                    <button
+                        onClick={() => { fetchRequests(); fetchStats(); }}
+                        className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-700"
+                    >
+                        <RefreshCw size={16} />
+                        Refresh
+                    </button>
+                </div>
+            </div>
+
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 gap-6 mb-8 md:grid-cols-4">
+                <div className="p-6 bg-white border border-gray-100 shadow-sm rounded-xl dark:bg-gray-800 dark:border-gray-700">
+                    <div className="mb-1 text-sm font-medium text-gray-500 uppercase dark:text-gray-400">Total Requests</div>
+                    <div className="text-3xl font-bold text-gray-900 dark:text-white">{stats.total_requests}</div>
+                </div>
+                <div className="p-6 bg-white border border-gray-100 shadow-sm rounded-xl dark:bg-gray-800 dark:border-gray-700">
+                    <div className="mb-1 text-sm font-medium text-gray-500 uppercase dark:text-gray-400">Pending Actions</div>
+                    <div className="text-3xl font-bold text-orange-600">{stats.pending_actions}</div>
+                </div>
+                <div className="p-6 bg-white border border-gray-100 shadow-sm rounded-xl dark:bg-gray-800 dark:border-gray-700">
+                    <div className="mb-1 text-sm font-medium text-gray-500 uppercase dark:text-gray-400">Resolved</div>
+                    <div className="text-3xl font-bold text-green-600">{stats.resolved}</div>
+                </div>
+                <div className="p-6 bg-white border border-gray-100 shadow-sm rounded-xl dark:bg-gray-800 dark:border-gray-700">
+                    <div className="mb-1 text-sm font-medium text-gray-500 uppercase dark:text-gray-400">Pending Payments</div>
+                    <div className="text-3xl font-bold text-red-600">{stats.pending_payments}</div>
+                </div>
+            </div>
+
+            {/* Filter Tabs */}
+            <div className="flex items-center gap-4 px-6 py-4 bg-white border-b border-gray-200 rounded-t-lg dark:bg-gray-800 dark:border-gray-700">
+                <Filter size={18} className="text-gray-400" />
+                {['All', 'PENDING', 'IN_PROGRESS', 'COMPLETED'].map(status => (
+                    <button
+                        key={status}
+                        onClick={() => setFilter(status)}
+                        className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${filter === status
+                                ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200'
+                                : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'
+                            }`}
+                    >
+                        {status === 'IN_PROGRESS' ? 'In Progress' : status.charAt(0) + status.slice(1).toLowerCase()}
+                    </button>
+                ))}
+            </div>
+
+            <RequestList requests={filteredRequests} loading={loading} />
+
+            {/* New Request Modal */}
+            {showModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+                    <div className="w-full max-w-md p-6 bg-white rounded-lg dark:bg-gray-800">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-bold dark:text-white">New Maintenance Request</h3>
+                            <button onClick={() => setShowModal(false)} className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <form onSubmit={handleSubmitRequest} className="space-y-4">
+                            <div>
+                                <label className="block mb-1 text-sm font-medium dark:text-gray-200">Request Level</label>
+                                <select
+                                    className="w-full px-3 py-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                    value={newRequest.category}
+                                    onChange={(e) =>
+                                        setNewRequest({
+                                            ...newRequest,
+                                            category: e.target.value,
+                                            asset_id: null,
+                                            type: e.target.value === 'FLAT' ? 'Plumbing' : 'Breakdown'
+                                        })
+                                    }
+                                >
+                                    <option value="FLAT">Flat Level</option>
+                                    <option value="ASSET">Asset Level</option>
+                                </select>
+                            </div>
+
+                            {newRequest.category === 'ASSET' && (
+                                <div>
+                                    <label className="block mb-1 text-sm font-medium dark:text-gray-200">Select Asset</label>
+                                    <select
+                                        className="w-full px-3 py-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                        value={newRequest.asset_id || ''}
+                                        onChange={(e) =>
+                                            setNewRequest({ ...newRequest, asset_id: e.target.value })
+                                        }
+                                        required
+                                    >
+                                        <option value="">-- Select Asset --</option>
+                                        {assets.map(asset => (
+                                            <option key={asset.asset_id} value={asset.asset_id}>
+                                                {asset.asset_name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            )}
+
+                            <div>
+                                <label className="block mb-1 text-sm font-medium dark:text-gray-200">Request Type</label>
+                                <select
+                                    className="w-full px-3 py-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                    value={newRequest.type}
+                                    onChange={e => setNewRequest({ ...newRequest, type: e.target.value })}
+                                >
+                                    {(newRequest.category === "FLAT" ? flatTasks : assetTasks).map(task => (
+                                        <option key={task} value={task}>
+                                            {task}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="block mb-1 text-sm font-medium dark:text-gray-200">Description</label>
+                                <textarea
+                                    className="w-full px-3 py-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                    rows="3"
+                                    value={newRequest.description}
+                                    onChange={e => setNewRequest({ ...newRequest, description: e.target.value })}
+                                    placeholder="Describe the issue..."
+                                    required
+                                ></textarea>
+                            </div>
+
+                            <button
+                                type="submit"
+                                className="w-full py-2 font-medium text-white bg-blue-600 rounded hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600"
+                            >
+                                Submit Request
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+export default DashboardPage;

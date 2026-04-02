@@ -1,0 +1,13 @@
+{
+  "name": "smart-apartment-system",
+  "version": "1.0.0",
+  "scripts": {
+    "postinstall": "cd backend && npm install",
+    "start": "cd backend && npm start"
+  },
+  "dependencies": {
+    "axios": "^1.13.5",
+    "bcrypt": "^6.0.0",
+    "qrcode": "^1.5.4"
+  }
+}

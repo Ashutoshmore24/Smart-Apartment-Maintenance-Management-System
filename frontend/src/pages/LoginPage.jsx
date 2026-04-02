@@ -1,0 +1,177 @@
+import React, { useState } from "react";
+import { loginResident, loginTechnician } from "../api";
+import { useNavigate, Link } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import GoogleButton from "../components/GoogleButton";
+
+const LoginPage = () => {
+    const [formData, setFormData] = useState({
+        name: "",
+        id: "",
+        role: "resident",
+    });
+
+    const [error, setError] = useState("");
+    const navigate = useNavigate();
+    const { login } = useAuth();
+
+    const handleChange = (e) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError("");
+
+        try {
+            let user = null;
+            let role = formData.role;
+
+            if (role === "resident") {
+                const res = await loginResident({
+                    name: formData.name,
+                    resident_id: formData.id,
+                });
+
+                user = res.data.user;
+                user.resident_id = parseInt(
+                    user.resident_id || formData.id,
+                    10
+                );
+            } else if (role === "admin") {
+                if (formData.name === "admin" && formData.id === "admin123") {
+                    user = { name: "Admin", role: "admin" };
+                } else {
+                    throw new Error("Invalid Admin Credentials");
+                }
+            } else if (role === "technician") {
+                const res = await loginTechnician({
+                    name: formData.name,
+                    technician_id: formData.id,
+                });
+
+                user = res.data.user;
+                user.role = "technician";
+            }
+
+            if (user) {
+                login(user, role);
+
+                if (role === "resident") navigate("/dashboard");
+                if (role === "admin") navigate("/admin-dashboard");
+                if (role === "technician") navigate("/technician-dashboard");
+            }
+        } catch (err) {
+            console.error(err);
+            setError(err.response?.data?.message || err.message || "Login failed");
+        }
+    };
+
+    return (
+        <div className="flex items-center justify-center min-h-screen transition-colors duration-300 bg-gray-50 dark:bg-gray-900">
+            <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-md dark:bg-gray-800 dark:border dark:border-gray-700">
+
+                <h2 className="mb-6 text-2xl font-bold text-center text-gray-800 dark:text-white">
+                    Login
+                </h2>
+
+                {error && (
+                    <p className="mb-4 text-sm text-center text-red-500">{error}</p>
+                )}
+
+                {/* 🔹 LOGIN FORM */}
+                <form onSubmit={handleSubmit} className="space-y-4">
+
+                    {/* Role */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Role
+                        </label>
+                        <select
+                            name="role"
+                            value={formData.role}
+                            onChange={handleChange}
+                            className="w-full p-2 mt-1 border rounded focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                        >
+                            <option value="resident">Resident</option>
+                            <option value="technician">Technician</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+
+                    {/* Name */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            {formData.role === "admin" ? "Username" : "Name"}
+                        </label>
+                        <input
+                            type="text"
+                            name="name"
+                            placeholder={
+                                formData.role === "admin" ? "admin" : "Full Name"
+                            }
+                            value={formData.name}
+                            onChange={handleChange}
+                            required
+                            className="w-full p-2 mt-1 border rounded focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                        />
+                    </div>
+
+                    {/* ID / Password */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            {formData.role === "admin"
+                                ? "Password"
+                                : formData.role === "technician"
+                                    ? "Technician ID"
+                                    : "Resident ID"}
+                        </label>
+                        <input
+                            type={formData.role === "admin" ? "password" : "text"}
+                            name="id"
+                            placeholder={
+                                formData.role === "admin" ? "admin123" : "Enter ID"
+                            }
+                            value={formData.id}
+                            onChange={handleChange}
+                            required
+                            className="w-full p-2 mt-1 border rounded focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                        />
+                    </div>
+
+                    {/* Submit */}
+                    <button
+                        type="submit"
+                        className="w-full px-4 py-2 font-bold text-white bg-green-600 rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+                    >
+                        Login
+                    </button>
+                </form>
+
+                {/* 🔹 GOOGLE LOGIN */}
+                <div className="mt-6 text-center">
+                    {formData.role === "resident" && <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
+                        OR
+                    </p>}
+
+                    {formData.role === "resident" && <GoogleButton />}
+                </div>
+
+                {/* 🔹 REGISTER LINK */}
+                <div className="mt-4 text-center">
+                    {formData.role === "resident" && (
+                        <Link
+                            to="/register"
+                            className="text-sm text-blue-600 hover:underline dark:text-blue-400"
+                        >
+                            Need an account? Register
+                        </Link>
+                    )}
+                </div>
+
+            </div>
+        </div>
+    );
+};
+
+export default LoginPage;
