@@ -234,7 +234,7 @@ router.get("/stats/resident/:resident_id", (req, res) => {
 router.post("/auto-assign", (req, res) => {
 
   const getUnassignedSql = `
-    SELECT request_id, request_type
+    SELECT request_id, request_type, resident_id
     FROM maintenance_request
     WHERE technician_id IS NULL
       AND status = 'PENDING'
