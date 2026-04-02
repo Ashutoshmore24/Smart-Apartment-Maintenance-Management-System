@@ -1,3 +1,7 @@
+const FRONTEND_URL =
+  process.env.FRONTEND_URL ||
+    "https://smart-apartment-maintena-git-bc4b50-ashutoshs-projects-41c64a00.vercel.app";
+
 const db = require("../db");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
@@ -42,7 +46,7 @@ exports.googleCallback = async (req, res) => {
             );
 
             res.cookie("token", token, { httpOnly: true, secure: true, path: "/", sameSite: "none" });
-            return res.redirect(`${process.env.FRONTEND_URL}` || "https://smart-apartment-maintena-git-bc4b50-ashutoshs-projects-41c64a00.vercel.app/dashboard");
+            return res.redirect(`${FRONTEND_URL}/dashboard`);
         }
         // 🔁 Existing user (resident)
         else {
@@ -105,7 +109,7 @@ exports.googleCallback = async (req, res) => {
                     console.log("⚠️ DEV: Your OTP is:", otp);
                 }
 
-                return res.redirect(`${process.env.FRONTEND_URL}` || "https://smart-apartment-maintena-git-bc4b50-ashutoshs-projects-41c64a00.vercel.app/otp?userId=${user.resident_id}");
+                return res.redirect(`${FRONTEND_URL}/otp?userId=${user.resident_id}`);
             }
             // 👉 First login → skip OTP
             else {
@@ -118,7 +122,7 @@ exports.googleCallback = async (req, res) => {
                 );
 
                 res.cookie("token", token, { httpOnly: true, secure: true, path: "/", sameSite: "none" });
-                return res.redirect(`${process.env.FRONTEND_URL}` || "https://smart-apartment-maintena-git-bc4b50-ashutoshs-projects-41c64a00.vercel.app/dashboard");
+                return res.redirect(`${FRONTEND_URL}/dashboard`);
             }
         }
     } catch (error) {

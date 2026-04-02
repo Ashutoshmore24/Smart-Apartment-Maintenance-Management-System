@@ -13,7 +13,7 @@ const app = express(); // ✅ FIRST create app
 
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://smart-apartment-maintena-git-bc4b50-ashutoshs-projects-41c64a00.vercel.app/"
+  "https://smart-apartment-maintena-git-bc4b50-ashutoshs-projects-41c64a00.vercel.app"
 ];
 
 app.use(cors({
