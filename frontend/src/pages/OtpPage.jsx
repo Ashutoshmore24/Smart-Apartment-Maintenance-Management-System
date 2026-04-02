@@ -2,6 +2,9 @@ import { useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "../context/AuthContext";
+const BACKEND_URL =
+  import.meta.env.VITE_BACKEND_URL ||
+  "https://smart-apartment-backend-production.up.railway.app";
 
 const OtpPage = () => {
     const [otp, setOtp] = useState("");
@@ -19,7 +22,7 @@ const OtpPage = () => {
         setError(null);
         try {
             await axios.post(
-                `${import.meta.env.VITE_BACKEND_URL}/auth/verify-otp` || "https://smart-apartment-backend-production.up.railway.app/auth/verify-otp",
+                `${BACKEND_URL}/auth/verify-otp` || "https://smart-apartment-backend-production.up.railway.app/auth/verify-otp",
                 { userId, otp },
                 { withCredentials: true }
             );
