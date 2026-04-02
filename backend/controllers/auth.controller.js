@@ -19,12 +19,30 @@ const transporter = nodemailer.createTransport({
     }
 });
 
+
 // 🔹 Google callback controller
 exports.googleCallback = async (req, res) => {
     try {
+        console.log("🔥 Google Callback HIT");
+        
+        if (!req.user) {
+            console.error("❌ req.user is undefined");
+            return res.redirect(`${FRONTEND_URL}/login`);
+        }
+
+        console.log("User:", req.user);
+
+
         const { id, displayName, emails, photos } = req.user;
 
-        const email = emails[0].value;
+        const email = emails?.[0]?.value;
+
+        
+        if (!email) {
+            console.error("❌ Email not found in Google profile:", req.user);
+            return res.redirect(`${FRONTEND_URL}/login`);
+        
+        }
         const avatar = photos?.[0]?.value;
 
         // 🔍 Check resident
@@ -127,7 +145,7 @@ exports.googleCallback = async (req, res) => {
         }
     } catch (error) {
         console.error("Auth error:", error);
-        res.status(500).json("Auth error");
+        return res.redirect(`${FRONTEND_URL}/login`);
     }
 };
 

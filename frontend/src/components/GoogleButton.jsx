@@ -5,7 +5,7 @@ const BACKEND_URL =
 const GoogleButton = () => {
 
     const handleGoogleLogin = () => {
-        window.location.href = `${BACKEND_URL}/auth/google` || "https://smart-apartment-backend-production.up.railway.app/auth/google";
+        window.location.href = `${BACKEND_URL}/auth/google`;
     };
 
     return (
