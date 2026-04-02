@@ -1,7 +1,7 @@
 // backend/routes/auth.routes.js
 const FRONTEND_URL =
   process.env.FRONTEND_URL ||
-    "https://smart-apartment-maintena-git-bc4b50-ashutoshs-projects-41c64a00.vercel.app";
+    "https://smart-apartment-maintenance-managem.vercel.app";
 
 const express = require("express");
 const passport = require("passport");
@@ -32,7 +32,7 @@ router.get(
     "/google/callback",
     passport.authenticate("google", {
         session: false,
-        failureRedirect: `${FRONTEND_URL}/login` || "https://smart-apartment-maintena-git-bc4b50-ashutoshs-projects-41c64a00.vercel.app/login"
+        failureRedirect: `${FRONTEND_URL}/login` || "https://smart-apartment-maintenance-managem.vercel.app/login"
     }),
     googleCallback
 );

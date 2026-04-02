@@ -1,6 +1,6 @@
 const GoogleButton = () => {
     const handleGoogleLogin = () => {
-        window.location.href = `${import.meta.env.VITE_BACKEND_URL}` || "https://smart-apartment-backend-production.up.railway.app/auth/google";
+        window.location.href = `${import.meta.env.VITE_BACKEND_URL}/auth/google` || "https://smart-apartment-backend-production.up.railway.app/auth/google";
     };
 
     return (

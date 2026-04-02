@@ -1,6 +1,6 @@
 const FRONTEND_URL =
   process.env.FRONTEND_URL ||
-    "https://smart-apartment-maintena-git-bc4b50-ashutoshs-projects-41c64a00.vercel.app";
+    "https://smart-apartment-maintenance-managem.vercel.app";
 
 const db = require("../db");
 const bcrypt = require("bcryptjs");

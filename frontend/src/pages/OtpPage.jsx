@@ -19,7 +19,7 @@ const OtpPage = () => {
         setError(null);
         try {
             await axios.post(
-                `${import.meta.env.VITE_BACKEND_URL || "https://smart-apartment-backend-production.up.railway.app"}/auth/verify-otp`,
+                `${import.meta.env.VITE_BACKEND_URL}/auth/verify-otp` || "https://smart-apartment-backend-production.up.railway.app/auth/verify-otp",
                 { userId, otp },
                 { withCredentials: true }
             );
