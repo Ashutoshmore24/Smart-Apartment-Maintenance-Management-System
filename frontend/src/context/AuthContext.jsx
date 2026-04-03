@@ -2,7 +2,7 @@ import React, { createContext, useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 const BACKEND_URL =
   import.meta.env.VITE_BACKEND_URL ||
-  "https://smart-apartment-backend-production.up.railway.app";
+  "-https://smart-apartment-maintenance-management-w8ds.onrender.com";
 
 const AuthContext = createContext();
 
@@ -16,7 +16,7 @@ export const AuthProvider = ({ children }) => {
     const checkAuth = async () => {
         try {
             // Check cookie-based Google auth first
-            const res = await axios.get(`${BACKEND_URL}/auth/me` || "https://smart-apartment-backend-production.up.railway.app/auth/me", { withCredentials: true });
+            const res = await axios.get(`${BACKEND_URL}/auth/me` || "https://smart-apartment-maintenance-management-w8ds.onrender.com/auth/me", { withCredentials: true });
             if (res.data.user) {
                 setUser(res.data.user);
                 setRole(res.data.role);
@@ -50,7 +50,7 @@ export const AuthProvider = ({ children }) => {
 
     const logout = async () => {
         try {
-            await axios.post(`${BACKEND_URL}/auth/logout` || "https://smart-apartment-backend-production.up.railway.app/auth/logout", {}, { withCredentials: true });
+            await axios.post(`${BACKEND_URL}/auth/logout` || "https://smart-apartment-maintenance-management-w8ds.onrender.com/auth/logout", {}, { withCredentials: true });
         } catch (e) { console.error(e) }
 
         setUser(null);

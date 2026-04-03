@@ -4,7 +4,7 @@ import axios from "axios";
 import { useAuth } from "../context/AuthContext";
 const BACKEND_URL =
   import.meta.env.VITE_BACKEND_URL ||
-  "https://smart-apartment-backend-production.up.railway.app";
+  "https://smart-apartment-maintenance-management-w8ds.onrender.com";
 
 const OtpPage = () => {
     const [otp, setOtp] = useState("");
@@ -22,7 +22,7 @@ const OtpPage = () => {
         setError(null);
         try {
             await axios.post(
-                `${BACKEND_URL}/auth/verify-otp` || "https://smart-apartment-backend-production.up.railway.app/auth/verify-otp",
+                `${BACKEND_URL}/auth/verify-otp` || "https://smart-apartment-maintenance-management-w8ds.onrender.com/auth/verify-otp",
                 { userId, otp },
                 { withCredentials: true }
             );

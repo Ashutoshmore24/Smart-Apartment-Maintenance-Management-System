@@ -3,7 +3,7 @@ const GoogleStrategy = require("passport-google-oauth20").Strategy;
 
 const BACKEND_URL =
   process.env.BACKEND_URL ||
-  "https://smart-apartment-backend-production.up.railway.app";
+  "https://smart-apartment-maintenance-management-w8ds.onrender.com";
 
 passport.use(
   new GoogleStrategy(

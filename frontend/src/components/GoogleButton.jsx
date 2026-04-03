@@ -1,6 +1,6 @@
 const BACKEND_URL =
   import.meta.env.VITE_BACKEND_URL ||
-  "https://smart-apartment-backend-production.up.railway.app";
+  "https://smart-apartment-maintenance-management-w8ds.onrender.com";
 
 const GoogleButton = () => {
 
