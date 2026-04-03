@@ -64,7 +64,7 @@ exports.googleCallback = async (req, res) => {
             );
 
             res.cookie("token", token, { httpOnly: true, secure: true, path: "/", sameSite: "none" });
-            return res.redirect(`${FRONTEND_URL}/dashboard`);
+            res.redirect(`${FRONTEND_URL}`);
         }
         // 🔁 Existing user (resident)
         else {
@@ -140,7 +140,7 @@ exports.googleCallback = async (req, res) => {
                 );
 
                 res.cookie("token", token, { httpOnly: true, secure: true, path: "/", sameSite: "none" });
-                return res.redirect(`${FRONTEND_URL}/dashboard`);
+                res.redirect(`${FRONTEND_URL}`);
             }
         }
     } catch (error) {
