@@ -12,6 +12,9 @@ import AboutPage from './pages/AboutPage';
 import AdminDashboard from './pages/AdminDashboard';
 import TechnicianDashboard from './pages/TechnicianDashboard';
 import OtpPage from './pages/OtpPage'; // ✅ NEW
+import AuthSuccess from "./pages/AuthSuccess";
+
+
 
 function App() {
   const [darkMode, setDarkMode] = useState(false);
@@ -46,6 +49,7 @@ function App() {
 
               {/* ✅ OTP ROUTE */}
               <Route path="/otp" element={<OtpPage />} />
+              <Route path="/auth-success" element={<AuthSuccess />} />
 
               <Route path="/dashboard" element={<DashboardPage />} />
               <Route path="/payments" element={<PaymentPage />} />

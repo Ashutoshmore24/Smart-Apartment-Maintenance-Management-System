@@ -14,8 +14,8 @@ const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString()
 const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
-        user: process.env.SMTP_EMAIL || "test@gmail.com",
-        pass: process.env.SMTP_PASS || "password"
+        user: process.env.SMTP_EMAIL,
+        pass: process.env.SMTP_PASS
     }
 });
 
@@ -64,7 +64,7 @@ exports.googleCallback = async (req, res) => {
             );
 
             res.cookie("token", token, { httpOnly: true, secure: true, path: "/", sameSite: "none" });
-            res.redirect(`${FRONTEND_URL}`);
+            res.redirect(`${FRONTEND_URL}/auth-success`);
         }
         // 🔁 Existing user (resident)
         else {
@@ -131,7 +131,7 @@ exports.googleCallback = async (req, res) => {
             }
             // 👉 First login → skip OTP
             else {
-                await db.promise().query("UPDATE resident SET is_first_login = 0 WHERE resident_id = ?", [user.resident_id]);
+                await db.promise().query("UPDATE resident SET is_first_login = 1 WHERE resident_id = ?", [user.resident_id]);
 
                 const token = jwt.sign(
                     { id: user.resident_id },
@@ -140,7 +140,7 @@ exports.googleCallback = async (req, res) => {
                 );
 
                 res.cookie("token", token, { httpOnly: true, secure: true, path: "/", sameSite: "none" });
-                res.redirect(`${FRONTEND_URL}`);
+                res.redirect(`${FRONTEND_URL}/auth-success`);
             }
         }
     } catch (error) {

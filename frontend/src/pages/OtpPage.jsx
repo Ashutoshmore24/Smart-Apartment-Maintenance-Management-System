@@ -22,7 +22,7 @@ const OtpPage = () => {
         setError(null);
         try {
             await axios.post(
-                `${BACKEND_URL}/auth/verify-otp` || "https://smart-apartment-maintenance-management-w8ds.onrender.com/auth/verify-otp",
+                `${BACKEND_URL}/auth/verify-otp`,
                 { userId, otp },
                 { withCredentials: true }
             );
