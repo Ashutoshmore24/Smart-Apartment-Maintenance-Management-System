@@ -5,22 +5,10 @@ const FRONTEND_URL =
 const db = require("../db");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const nodemailer = require("nodemailer");
+const { sendOtpEmail } = require("../utils/sendOtpEmail");
 
 // 🔹 Generate OTP
 const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
-
-// 🔹 Mail transporter (timeouts avoid hanging background sends forever)
-const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-        user: process.env.SMTP_EMAIL,
-        pass: process.env.SMTP_PASS,
-    },
-    connectionTimeout: 15000,
-    greetingTimeout: 10000,
-    socketTimeout: 20000,
-});
 
 
 // 🔹 Google callback controller
@@ -91,51 +79,14 @@ exports.googleCallback = async (req, res) => {
                 res.redirect(`${FRONTEND_URL}/otp?userId=${user.resident_id}`);
 
                 setImmediate(() => {
-                    if (!process.env.SMTP_EMAIL || !process.env.SMTP_PASS) {
-                        console.warn("SMTP_EMAIL / SMTP_PASS not set — OTP email not sent. OTP:", otp);
-                        return;
-                    }
-                    transporter
-                        .sendMail({
-                            from: `"Smart Apartment System" <${process.env.SMTP_EMAIL}>`,
-                            to: email,
-                            subject: "Your OTP Code - Smart Apartment System",
-                            html: `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
-      
-      <h2 style="color: #333; text-align: center;">
-        Smart Apartment System
-      </h2>
-
-      <p style="font-size: 16px; color: #555;">
-        Hello,
-      </p>
-
-      <p style="font-size: 16px; color: #555;">
-        Your One-Time Password (OTP) for login is:
-      </p>
-
-      <div style="text-align: center; margin: 20px 0;">
-        <span style="font-size: 28px; letter-spacing: 5px; font-weight: bold; color: #2E86DE;">
-          ${otp}
-        </span>
-      </div>
-
-      <p style="font-size: 14px; color: #777;">
-        This OTP is valid for 5 minutes. Please do not share it with anyone.
-      </p>
-
-      <hr style="margin: 20px 0;" />
-
-      <p style="font-size: 12px; color: #aaa; text-align: center;">
-        If you did not request this, please ignore this email.
-      </p>
-
-    </div>
-  `,
+                    sendOtpEmail(email, otp)
+                        .then((info) => {
+                            if (info?.provider) {
+                                console.log(`OTP email sent via ${info.provider}`);
+                            }
                         })
                         .catch((mailErr) => {
-                            console.error("Mail sending failed:", mailErr);
+                            console.error("OTP email failed:", mailErr.message || mailErr);
                             console.log("⚠️ OTP (copy from logs if email failed):", otp);
                         });
                 });
