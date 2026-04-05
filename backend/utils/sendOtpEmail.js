@@ -15,83 +15,56 @@ function otpEmailHtml(otp) {
     </div>`;
 }
 
-let smtpTransporter;
+let transporter;
 
-function getSmtpTransporter() {
+/**
+ * Gmail SMTP via Nodemailer (demo/dev).
+ * Set on the server (e.g. Render):
+ *   SMTP_EMAIL   — full Gmail address (the dedicated account)
+ *   SMTP_PASS    — Google App Password (16 chars, not your normal Gmail password)
+ * https://myaccount.google.com/apppasswords — requires 2-Step Verification on the Google account.
+ */
+function getTransporter() {
     if (!process.env.SMTP_EMAIL || !process.env.SMTP_PASS) return null;
-    if (!smtpTransporter) {
-        smtpTransporter = nodemailer.createTransport({
-            service: "gmail",
+    if (!transporter) {
+        transporter = nodemailer.createTransport({
+            host: "smtp.gmail.com",
+            port: 465,
+            secure: true,
             auth: {
                 user: process.env.SMTP_EMAIL,
                 pass: process.env.SMTP_PASS,
             },
-            connectionTimeout: 15000,
-            greetingTimeout: 10000,
-            socketTimeout: 20000,
+            connectionTimeout: 60000,
+            greetingTimeout: 30000,
+            socketTimeout: 60000,
         });
     }
-    return smtpTransporter;
+    return transporter;
 }
 
 /**
- * Resend HTTPS API — works reliably from Render (no SMTP port blocking).
- * Set RESEND_API_KEY on the host. Optionally RESEND_FROM (must be a verified sender/domain in Resend).
+ * Sends OTP to any recipient email (Gmail SMTP allows this once authenticated).
+ * @returns {Promise<{ provider: string }|null>}
  */
-async function sendViaResend(to, otp) {
-    const html = otpEmailHtml(otp);
-    const from =
-        process.env.RESEND_FROM || "Smart Apartment <onboarding@resend.dev>";
-    const res = await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: {
-            Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-            from,
-            to: [to],
-            subject: "Your OTP Code - Smart Apartment System",
-            html,
-        }),
-    });
-
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) {
-        const msg = data.message || JSON.stringify(data);
-        throw new Error(`Resend API error (${res.status}): ${msg}`);
+async function sendOtpEmail(to, otp) {
+    const transport = getTransporter();
+    if (!transport) {
+        console.warn(
+            "SMTP not configured: set SMTP_EMAIL and SMTP_PASS (Gmail + App Password). OTP:",
+            otp
+        );
+        return null;
     }
-    return { provider: "resend", id: data.id };
-}
 
-async function sendViaSmtp(to, otp) {
-    const transport = getSmtpTransporter();
-    if (!transport) return null;
     await transport.sendMail({
         from: `"Smart Apartment System" <${process.env.SMTP_EMAIL}>`,
         to,
         subject: "Your OTP Code - Smart Apartment System",
         html: otpEmailHtml(otp),
     });
-    return { provider: "smtp" };
-}
 
-/**
- * Sends OTP email. Prefers Resend (API) when RESEND_API_KEY is set; otherwise Gmail SMTP if configured.
- * @returns {Promise<{ provider: string }|null>}
- */
-async function sendOtpEmail(to, otp) {
-    if (process.env.RESEND_API_KEY) {
-        return sendViaResend(to, otp);
-    }
-    const smtp = await sendViaSmtp(to, otp);
-    if (smtp) return smtp;
-
-    console.warn(
-        "No email provider: set RESEND_API_KEY (recommended) or SMTP_EMAIL + SMTP_PASS. OTP:",
-        otp
-    );
-    return null;
+    return { provider: "gmail-smtp" };
 }
 
 module.exports = { sendOtpEmail, otpEmailHtml };
