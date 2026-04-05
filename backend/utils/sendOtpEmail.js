@@ -24,22 +24,22 @@ let transporter;
  *   SMTP_PASS    — Google App Password (16 chars, not your normal Gmail password)
  * https://myaccount.google.com/apppasswords — requires 2-Step Verification on the Google account.
  */
+
+
 function getTransporter() {
     if (!process.env.SMTP_EMAIL || !process.env.SMTP_PASS) return null;
+
     if (!transporter) {
         transporter = nodemailer.createTransport({
-            host: "smtp.gmail.com",
-            port: 465,
-            secure: true,
+            service: "gmail",
             auth: {
                 user: process.env.SMTP_EMAIL,
                 pass: process.env.SMTP_PASS,
             },
-            connectionTimeout: 60000,
-            greetingTimeout: 30000,
-            socketTimeout: 60000,
+            family: 4, // 🔥 FORCE IPv4 (fixes Render issue)
         });
     }
+
     return transporter;
 }
 
