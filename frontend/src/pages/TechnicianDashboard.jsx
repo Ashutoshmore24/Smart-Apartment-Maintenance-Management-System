@@ -24,8 +24,9 @@ const TechnicianDashboard = () => {
                 api.get(`/requests/technician/${user.technician_id}`),
                 getTechStats(user.technician_id)
             ]);
-            
-            setRequests(myTasks);
+
+            const list = reqRes.data;
+            setRequests(Array.isArray(list) ? list : []);
             setStats(statRes.data);
             setLoading(false);
         } catch (error) {

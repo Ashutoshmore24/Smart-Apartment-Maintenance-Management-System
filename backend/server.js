@@ -11,10 +11,18 @@ require("./utils/google");
 const app = express(); // ✅ FIRST create app
 
 
-const allowedOrigins = [
+const defaultOrigins = [
   "http://localhost:5173",
-  "https://smart-apartment-maintenance-managem.vercel.app"
+  "http://127.0.0.1:5173",
+  "https://smart-apartment-maintenance-managem.vercel.app",
 ];
+const extraOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(",").map((o) => o.trim()).filter(Boolean)
+  : [];
+if (process.env.FRONTEND_URL) {
+  extraOrigins.push(process.env.FRONTEND_URL.trim());
+}
+const allowedOrigins = [...new Set([...defaultOrigins, ...extraOrigins])];
 
 app.use(cors({
   origin: function (origin, callback) {

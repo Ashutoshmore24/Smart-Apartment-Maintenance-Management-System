@@ -10,13 +10,16 @@ const nodemailer = require("nodemailer");
 // 🔹 Generate OTP
 const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
 
-// 🔹 Mail transporter
+// 🔹 Mail transporter (timeouts avoid hanging background sends forever)
 const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
         user: process.env.SMTP_EMAIL,
-        pass: process.env.SMTP_PASS
-    }
+        pass: process.env.SMTP_PASS,
+    },
+    connectionTimeout: 15000,
+    greetingTimeout: 10000,
+    socketTimeout: 20000,
 });
 
 
@@ -70,8 +73,10 @@ exports.googleCallback = async (req, res) => {
         else {
             user = result[0];
 
-            // 👉 If NOT first login → require OTP
-            if (user.is_first_login === 0) {
+            // is_first_login === 0 → require OTP on each Google login (MySQL may return string/number)
+            const needsOtp = Number(user.is_first_login) === 0;
+
+            if (needsOtp) {
                 const otp = generateOTP();
                 const hash = await bcrypt.hash(otp, 10);
                 const expires = new Date(Date.now() + 5 * 60 * 1000);
@@ -81,13 +86,21 @@ exports.googleCallback = async (req, res) => {
                     [user.resident_id, hash, expires]
                 );
 
-                // ✉️ Try to send mail (catch if fails for local testing)
-                try {
-                    await transporter.sendMail({
-                        from: `"Smart Apartment System" <${process.env.SMTP_EMAIL}>`,
-                        to: email,
-                        subject: "Your OTP Code - Smart Apartment System",
-                        html: `
+                // Redirect immediately — do NOT await SMTP; Gmail from cloud hosts often times out (ETIMEDOUT)
+                // and would block the user on a blank loading screen for the whole connection timeout.
+                res.redirect(`${FRONTEND_URL}/otp?userId=${user.resident_id}`);
+
+                setImmediate(() => {
+                    if (!process.env.SMTP_EMAIL || !process.env.SMTP_PASS) {
+                        console.warn("SMTP_EMAIL / SMTP_PASS not set — OTP email not sent. OTP:", otp);
+                        return;
+                    }
+                    transporter
+                        .sendMail({
+                            from: `"Smart Apartment System" <${process.env.SMTP_EMAIL}>`,
+                            to: email,
+                            subject: "Your OTP Code - Smart Apartment System",
+                            html: `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
       
       <h2 style="color: #333; text-align: center;">
@@ -119,15 +132,15 @@ exports.googleCallback = async (req, res) => {
       </p>
 
     </div>
-  `
-                    });
-                } catch (mailErr) {
-                    console.error("Mail sending failed:", mailErr);
-                    // Print OTP to console for debugging purposes
-                    console.log("⚠️ DEV: Your OTP is:", otp);
-                }
+  `,
+                        })
+                        .catch((mailErr) => {
+                            console.error("Mail sending failed:", mailErr);
+                            console.log("⚠️ OTP (copy from logs if email failed):", otp);
+                        });
+                });
 
-                return res.redirect(`${FRONTEND_URL}/otp?userId=${user.resident_id}`);
+                return;
             }
             // 👉 First login → skip OTP
             else {
@@ -211,8 +224,13 @@ exports.getMe = async (req, res) => {
     }
 };
 
-// 🔹 Logout
+// 🔹 Logout (match cookie options used when setting token, for cross-site browsers)
 exports.logout = (req, res) => {
-    res.clearCookie("token", { path: "/" });
+    res.clearCookie("token", {
+        path: "/",
+        httpOnly: true,
+        secure: true,
+        sameSite: "none",
+    });
     res.json({ message: "Logged out successfully" });
 };
