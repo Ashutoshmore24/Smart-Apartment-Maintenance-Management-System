@@ -74,24 +74,17 @@ exports.googleCallback = async (req, res) => {
                     [user.resident_id, hash, expires]
                 );
 
-                // Redirect immediately — do NOT await SMTP; Gmail from cloud hosts often times out (ETIMEDOUT)
-                // and would block the user on a blank loading screen for the whole connection timeout.
-                res.redirect(`${FRONTEND_URL}/otp?userId=${user.resident_id}`);
+                try {
+                    const info = await sendOtpEmail(email, otp);
+                    if (info?.provider) {
+                        console.log(`OTP email sent via ${info.provider}`);
+                    }
+                } catch (mailErr) {
+                    console.error("OTP email failed:", mailErr.message || mailErr);
+                    console.log("⚠️ OTP (copy from logs if email failed):", otp);
+                }
 
-                setImmediate(() => {
-                    sendOtpEmail(email, otp)
-                        .then((info) => {
-                            if (info?.provider) {
-                                console.log(`OTP email sent via ${info.provider}`);
-                            }
-                        })
-                        .catch((mailErr) => {
-                            console.error("OTP email failed:", mailErr.message || mailErr);
-                            console.log("⚠️ OTP (copy from logs if email failed):", otp);
-                        });
-                });
-
-                return;
+                return res.redirect(`${FRONTEND_URL}/otp?userId=${user.resident_id}`);
             }
             // 👉 First login → skip OTP
             else {
