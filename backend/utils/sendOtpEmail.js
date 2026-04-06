@@ -1,5 +1,3 @@
-const nodemailer = require("nodemailer");
-
 function otpEmailHtml(otp) {
     return `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
@@ -15,56 +13,49 @@ function otpEmailHtml(otp) {
     </div>`;
 }
 
-let transporter;
-
 /**
- * Gmail SMTP via Nodemailer (demo/dev).
- * Set on the server (e.g. Render):
- *   SMTP_EMAIL   — full Gmail address (the dedicated account)
- *   SMTP_PASS    — Google App Password (16 chars, not your normal Gmail password)
- * https://myaccount.google.com/apppasswords — requires 2-Step Verification on the Google account.
- */
-
-
-function getTransporter() {
-    if (!process.env.SMTP_EMAIL || !process.env.SMTP_PASS) return null;
-
-    if (!transporter) {
-        transporter = nodemailer.createTransport({
-            service: "gmail",
-            auth: {
-                user: process.env.SMTP_EMAIL,
-                pass: process.env.SMTP_PASS,
-            },
-            family: 4, // 🔥 FORCE IPv4 (fixes Render issue)
-        });
-    }
-
-    return transporter;
-}
-
-/**
- * Sends OTP to any recipient email (Gmail SMTP allows this once authenticated).
+ * Sends OTP via Brevo API (HTTP) which bypasses Render's SMTP block entirely.
+ * Requires BREVO_API_KEY in the environment variables.
  * @returns {Promise<{ provider: string }|null>}
  */
 async function sendOtpEmail(to, otp) {
-    const transport = getTransporter();
-    if (!transport) {
-        console.warn(
-            "SMTP not configured: set SMTP_EMAIL and SMTP_PASS (Gmail + App Password). OTP:",
-            otp
-        );
+    const apiKey = process.env.BREVO_API_KEY;
+    const senderEmail = process.env.SMTP_EMAIL || "support.smartstay2026@gmail.com";
+    
+    if (!apiKey) {
+        console.warn("Email API not configured: set BREVO_API_KEY in environment variables. OTP:", otp);
         return null;
     }
 
-    await transport.sendMail({
-        from: `"Smart Apartment System" <${process.env.SMTP_EMAIL}>`,
-        to,
-        subject: "Your OTP Code - Smart Apartment System",
-        html: otpEmailHtml(otp),
-    });
+    try {
+        const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+            method: "POST",
+            headers: {
+                "accept": "application/json",
+                "api-key": apiKey,
+                "content-type": "application/json"
+            },
+            body: JSON.stringify({
+                sender: { 
+                    name: "Smart Apartment", 
+                    email: senderEmail 
+                },
+                to: [{ email: to }],
+                subject: "Your OTP Code - Smart Apartment System",
+                htmlContent: otpEmailHtml(otp)
+            })
+        });
 
-    return { provider: "gmail-smtp" };
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(`Brevo HTTP Error: ${response.status} - ${JSON.stringify(errorData)}`);
+        }
+
+        return { provider: "brevo-http" };
+    } catch (error) {
+        console.error("sendOtpEmail Error:", error.message);
+        throw error;
+    }
 }
 
 module.exports = { sendOtpEmail, otpEmailHtml };
