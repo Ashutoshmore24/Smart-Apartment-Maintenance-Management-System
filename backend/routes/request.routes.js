@@ -359,7 +359,7 @@ router.get("/technician/:technician_id", (req, res) => {
            r.email AS resident_email, 
            r.flat_id AS resident_flat_id
     FROM maintenance_request mr
-    JOIN resident r ON mr.resident_id = r.resident_id
+    LEFT JOIN resident r ON mr.resident_id = r.resident_id
     WHERE mr.technician_id = ?
     ORDER BY mr.request_id DESC
   `;
