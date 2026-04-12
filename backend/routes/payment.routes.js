@@ -72,7 +72,7 @@ router.post("/pay", (req, res) => {
           if (err2) {
             return connection.rollback(() => {
               connection.release();
-              res.status(500).json({ message: "Payment failed" });
+              res.status(500).json({ message: "Payment Insert Failed: " + (err2.sqlMessage || err2.message) });
             });
           }
 
@@ -88,7 +88,7 @@ router.post("/pay", (req, res) => {
             if (err3) {
               return connection.rollback(() => {
                 connection.release();
-                res.status(500).json({ message: "Failed to update bill status" });
+                res.status(500).json({ message: "Bill Status Update Failed: " + (err3.sqlMessage || err3.message) });
               });
             }
 
@@ -96,7 +96,7 @@ router.post("/pay", (req, res) => {
               if (err4) {
                 return connection.rollback(() => {
                   connection.release();
-                  res.status(500).json({ message: "Commit failed" });
+                  res.status(500).json({ message: "Commit Failed: " + (err4.sqlMessage || err4.message) });
                 });
               }
               connection.release();
