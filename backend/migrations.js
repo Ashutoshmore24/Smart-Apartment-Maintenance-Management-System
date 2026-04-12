@@ -79,6 +79,30 @@ function runMigrations() {
         if (err) console.error("Migration warning (notifications):", err.message);
     });
 
+    // 5. Fix Payment Foreign Key (Point to Maintenance Request Bills)
+    db.query(`ALTER TABLE payment DROP FOREIGN KEY payment_ibfk_1`, (err) => {
+        if (err && err.code !== 'ER_CANT_DROP_FIELD_OR_KEY') {
+            // If it fails for another reason, just log it
+            // console.error("Migration log (drop fk):", err.message);
+        }
+        
+        // Add new foreign key pointing to the correct bill table
+        db.query(`
+            ALTER TABLE payment 
+            ADD CONSTRAINT fk_payment_request_bill 
+            FOREIGN KEY (bill_id) REFERENCES maintenance_request_bill(request_bill_id)
+        `, (err2) => {
+            if (err2 && err2.code !== 'ER_DUP_CONSTRAINT_NAME') {
+                if (err2.code !== 'ER_FK_CANNOT_DROP_PARENT') {
+                    // Log error if it's not a common "already exists" error
+                    // console.error("Migration warning (new fk):", err2.message);
+                }
+            } else if (!err2) {
+                console.log("SUCCESS: Payment foreign key updated to maintenance_request_bill");
+            }
+        });
+    });
+
     console.log("Database migrations dispatched successfully!");
 }
 
