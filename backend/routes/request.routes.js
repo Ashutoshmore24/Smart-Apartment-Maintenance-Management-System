@@ -120,14 +120,17 @@ router.put("/:id", (req, res) => {
 // ============================
 router.put("/complete/:request_id", (req, res) => {
   const { request_id } = req.params;
-  const { cost } = req.body;
+  let { cost } = req.body;
 
-  if (!cost || cost <= 0 || cost > 100000) {
-    return res.status(400).json({ message: "Cost is mandatory and must be between 1 and 100,000" });
+  // Ensure cost is a valid number
+  const numericCost = Number(cost);
+
+  if (isNaN(numericCost) || numericCost <= 0 || numericCost > 100000) {
+    return res.status(400).json({ message: "Valid cost between 1 and 100,000 is required" });
   }
 
   db.beginTransaction((err) => {
-    if (err) return res.status(500).json(err);
+    if (err) return res.status(500).json({ message: err.message });
 
     // 1. Update request status and cost
     const updateSql = `
@@ -136,9 +139,9 @@ router.put("/complete/:request_id", (req, res) => {
       WHERE request_id = ? AND status != 'COMPLETED'
     `;
 
-    db.query(updateSql, [cost, request_id], (err, result) => {
+    db.query(updateSql, [numericCost, request_id], (err, result) => {
       if (err) {
-        return db.rollback(() => res.status(500).json({ error: err.message }));
+        return db.rollback(() => res.status(500).json({ message: err.message }));
       }
 
       if (result.affectedRows === 0) {
@@ -155,7 +158,7 @@ router.put("/complete/:request_id", (req, res) => {
 
       db.query(getFlatSql, [request_id], (err, rows) => {
         if (err || rows.length === 0) {
-          return db.rollback(() => res.status(500).json({ message: "Request not found for completion check" }));
+          return db.rollback(() => res.status(500).json({ message: "Request info not found for billing" }));
         }
 
         const flat_id = rows[0].flat_id;
@@ -164,10 +167,10 @@ router.put("/complete/:request_id", (req, res) => {
         const completeWithoutBill = () => {
           db.commit((err) => {
             if (err) {
-              return db.rollback(() => res.status(500).json({ error: "Commit failed: " + err.message }));
+              return db.rollback(() => res.status(500).json({ message: "Commit failed: " + err.message }));
             }
             if (resident_id) {
-                createNotification('RESIDENT', resident_id, `Request #${request_id} completed. Cost Rs. ${cost}`).catch(console.error);
+                createNotification('RESIDENT', resident_id, `Request #${request_id} completed. Cost Rs. ${numericCost}`).catch(console.error);
             }
             res.json({ message: "Request completed successfully" });
           });
@@ -184,10 +187,9 @@ router.put("/complete/:request_id", (req, res) => {
   VALUES(?, ?, ?)
     `;
 
-        db.query(insertBillSql, [request_id, flat_id, cost], (err) => {
+        db.query(insertBillSql, [request_id, flat_id, numericCost], (err) => {
           if (err) {
-            // Catch duplicate entry error specifically if needed, but general rollback covers it
-            return db.rollback(() => res.status(500).json({ error: "Bill generation failed or already exists. " + err.message }));
+            return db.rollback(() => res.status(500).json({ message: "Bill generation failed. " + err.message }));
           }
 
           completeWithoutBill();
