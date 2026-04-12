@@ -129,70 +129,92 @@ router.put("/complete/:request_id", (req, res) => {
     return res.status(400).json({ message: "Valid cost between 1 and 100,000 is required" });
   }
 
-  db.beginTransaction((err) => {
-    if (err) return res.status(500).json({ message: err.message });
+  db.getConnection((err, connection) => {
+    if (err) return res.status(500).json({ message: "Database connection failed: " + err.message });
 
-    // 1. Update request status and cost
-    const updateSql = `
-      UPDATE maintenance_request
-      SET status = 'COMPLETED', cost = ?, completed_at = NOW()
-      WHERE request_id = ? AND status != 'COMPLETED'
-    `;
-
-    db.query(updateSql, [numericCost, request_id], (err, result) => {
+    connection.beginTransaction((err) => {
       if (err) {
-        return db.rollback(() => res.status(500).json({ message: err.message }));
+        connection.release();
+        return res.status(500).json({ message: "Transaction failed: " + err.message });
       }
 
-      if (result.affectedRows === 0) {
-        return db.rollback(() => res.status(400).json({ message: "Request not found or already completed" }));
-      }
+      // 1. Update request status and cost
+      const updateSql = `
+        UPDATE maintenance_request
+        SET status = 'COMPLETED', cost = ?, completed_at = NOW()
+        WHERE request_id = ? AND status != 'COMPLETED'
+      `;
 
-      // 2. Get flat_id (Use LEFT JOIN so Asset requests don't fail!)
-      const getFlatSql = `
-        SELECT mr.resident_id, r.flat_id
-        FROM maintenance_request mr
-        LEFT JOIN resident r ON mr.resident_id = r.resident_id
-        WHERE mr.request_id = ?
-    `;
-
-      db.query(getFlatSql, [request_id], (err, rows) => {
-        if (err || rows.length === 0) {
-          return db.rollback(() => res.status(500).json({ message: "Request info not found for billing" }));
-        }
-
-        const flat_id = rows[0].flat_id;
-        const resident_id = rows[0].resident_id;
-
-        const completeWithoutBill = () => {
-          db.commit((err) => {
-            if (err) {
-              return db.rollback(() => res.status(500).json({ message: "Commit failed: " + err.message }));
-            }
-            if (resident_id) {
-                createNotification('RESIDENT', resident_id, `Request #${request_id} completed. Cost Rs. ${numericCost}`).catch(console.error);
-            }
-            res.json({ message: "Request completed successfully" });
+      connection.query(updateSql, [numericCost, request_id], (err, result) => {
+        if (err) {
+          return connection.rollback(() => {
+            connection.release();
+            res.status(500).json({ message: "Update failed: " + err.message });
           });
-        };
-
-        // If no flat_id exists (e.g. Asset task), just complete without billing
-        if (!flat_id) {
-           return completeWithoutBill();
         }
 
-        // 3. Insert bill (Prevent duplicate with IGNORE or check, but schema has UNIQUE on request_id)
-        const insertBillSql = `
-          INSERT INTO maintenance_request_bill(request_id, flat_id, amount)
-  VALUES(?, ?, ?)
-    `;
+        if (result.affectedRows === 0) {
+          return connection.rollback(() => {
+            connection.release();
+            res.status(400).json({ message: "Request not found or already completed" });
+          });
+        }
 
-        db.query(insertBillSql, [request_id, flat_id, numericCost], (err) => {
-          if (err) {
-            return db.rollback(() => res.status(500).json({ message: "Bill generation failed. " + err.message }));
+        // 2. Get flat_id (Use LEFT JOIN so Asset requests don't fail!)
+        const getFlatSql = `
+          SELECT mr.resident_id, r.flat_id
+          FROM maintenance_request mr
+          LEFT JOIN resident r ON mr.resident_id = r.resident_id
+          WHERE mr.request_id = ?
+        `;
+
+        connection.query(getFlatSql, [request_id], (err, rows) => {
+          if (err || rows.length === 0) {
+            return connection.rollback(() => {
+              connection.release();
+              res.status(500).json({ message: "Request info not found for billing" });
+            });
           }
 
-          completeWithoutBill();
+          const flat_id = rows[0].flat_id;
+          const resident_id = rows[0].resident_id;
+
+          const finishCompletion = () => {
+            connection.commit((err) => {
+              if (err) {
+                return connection.rollback(() => {
+                  connection.release();
+                  res.status(500).json({ message: "Commit failed: " + err.message });
+                });
+              }
+              connection.release();
+              if (resident_id) {
+                createNotification('RESIDENT', resident_id, `Request #${request_id} completed. Cost Rs. ${numericCost}`).catch(console.error);
+              }
+              res.json({ message: "Request completed successfully" });
+            });
+          };
+
+          // If no flat_id exists (e.g. Asset task), just complete without billing
+          if (!flat_id) {
+            return finishCompletion();
+          }
+
+          // 3. Insert bill
+          const insertBillSql = `
+            INSERT INTO maintenance_request_bill(request_id, flat_id, amount)
+            VALUES(?, ?, ?)
+          `;
+
+          connection.query(insertBillSql, [request_id, flat_id, numericCost], (err) => {
+            if (err) {
+              return connection.rollback(() => {
+                connection.release();
+                res.status(500).json({ message: "Bill generation failed. " + err.message });
+              });
+            }
+            finishCompletion();
+          });
         });
       });
     });

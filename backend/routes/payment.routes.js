@@ -53,46 +53,55 @@ router.post("/pay", (req, res) => {
       return res.status(400).json({ message: "Incorrect payment amount." });
     }
 
-    db.beginTransaction(err => {
-      if (err) return res.status(500).json(err);
+    db.getConnection((err, connection) => {
+      if (err) return res.status(500).json({ message: "Database connection failed" });
 
-      // 1️⃣ Insert payment
-      const paySql = `
-        INSERT INTO payment (payment_date, amount, payment_mode, bill_id)
-        VALUES (CURDATE(), ?, ?, ?)
-      `;
-
-      db.query(paySql, [amount, payment_mode, bill_id], err2 => {
-        if (err2) {
-          return db.rollback(() =>
-            res.status(500).json({ message: "Payment failed" })
-          );
+      connection.beginTransaction(err => {
+        if (err) {
+          connection.release();
+          return res.status(500).json({ message: "Transaction failed" });
         }
 
-        // 2️⃣ Update bill status
-        const updateSql = `
-          UPDATE maintenance_request_bill
-          SET payment_status = 'PAID',
-              paid_at = NOW()
-          WHERE request_bill_id = ?
+        // 1️⃣ Insert payment
+        const paySql = `
+          INSERT INTO payment (payment_date, amount, payment_mode, bill_id)
+          VALUES (CURDATE(), ?, ?, ?)
         `;
 
-        db.query(updateSql, [bill_id], err3 => {
-          if (err3) {
-            return db.rollback(() =>
-              res.status(500).json({ message: "Failed to update bill status" })
-            );
+        connection.query(paySql, [amount, payment_mode, bill_id], err2 => {
+          if (err2) {
+            return connection.rollback(() => {
+              connection.release();
+              res.status(500).json({ message: "Payment failed" });
+            });
           }
 
-          db.commit(err4 => {
-            if (err4) {
-              return db.rollback(() =>
-                res.status(500).json({ message: "Commit failed" })
-              );
+          // 2️⃣ Update bill status
+          const updateSql = `
+            UPDATE maintenance_request_bill
+            SET payment_status = 'PAID',
+                paid_at = NOW()
+            WHERE request_bill_id = ?
+          `;
+
+          connection.query(updateSql, [bill_id], err3 => {
+            if (err3) {
+              return connection.rollback(() => {
+                connection.release();
+                res.status(500).json({ message: "Failed to update bill status" });
+              });
             }
 
-            // ✅ Respond ONLY after DB is consistent
-            res.json({ message: "Payment successful" });
+            connection.commit(err4 => {
+              if (err4) {
+                return connection.rollback(() => {
+                  connection.release();
+                  res.status(500).json({ message: "Commit failed" });
+                });
+              }
+              connection.release();
+              res.json({ message: "Payment successful" });
+            });
           });
         });
       });
