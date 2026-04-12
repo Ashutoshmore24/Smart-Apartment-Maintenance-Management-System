@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import api from '../api';
 import StatusBadge from '../components/StatusBadge';
-import { User, CheckCircle, Search } from 'lucide-react';
+import AdminAnalysis from '../components/AdminAnalysis';
+import { User, CheckCircle, Search, BarChart2 } from 'lucide-react';
 
 const AdminDashboard = () => {
     const [requests, setRequests] = useState([]);
     const [technicians, setTechnicians] = useState([]);
     const [allTechnicians, setAllTechnicians] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState('requests'); // 'requests' | 'technicians'
+    const [activeTab, setActiveTab] = useState('requests'); // 'requests' | 'technicians' | 'analysis'
 
     // Search states
     const [requestSearch, setRequestSearch] = useState('');
@@ -155,6 +156,12 @@ const AdminDashboard = () => {
                 >
                     Manage Technicians
                 </button>
+                <button
+                    onClick={() => setActiveTab('analysis')}
+                    className={`pb-2 px-1 text-sm font-medium flex items-center gap-2 transition-colors ${activeTab === 'analysis' ? 'border-b-2 border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'}`}
+                >
+                    <BarChart2 size={16} /> Data Analysis
+                </button>
             </div>
 
             {activeTab === 'requests' && (
@@ -299,6 +306,8 @@ const AdminDashboard = () => {
                     </div>
                 </div>
             )}
+
+            {activeTab === 'analysis' && <AdminAnalysis />}
         </div>
     );
 };

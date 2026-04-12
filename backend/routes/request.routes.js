@@ -137,21 +137,38 @@ router.put("/complete/:request_id", (req, res) => {
         return db.rollback(() => res.status(400).json({ message: "Request not found or already completed" }));
       }
 
-      // 2. Get flat_id
+      // 2. Get flat_id (Use LEFT JOIN so Asset requests don't fail!)
       const getFlatSql = `
-        SELECT r.flat_id, mr.resident_id
+        SELECT mr.resident_id, r.flat_id
         FROM maintenance_request mr
-        JOIN resident r ON mr.resident_id = r.resident_id
+        LEFT JOIN resident r ON mr.resident_id = r.resident_id
         WHERE mr.request_id = ?
     `;
 
       db.query(getFlatSql, [request_id], (err, rows) => {
         if (err || rows.length === 0) {
-          return db.rollback(() => res.status(500).json({ message: "Flat not found for this request" }));
+          return db.rollback(() => res.status(500).json({ message: "Request not found for completion check" }));
         }
 
         const flat_id = rows[0].flat_id;
         const resident_id = rows[0].resident_id;
+
+        const completeWithoutBill = () => {
+          db.commit((err) => {
+            if (err) {
+              return db.rollback(() => res.status(500).json({ error: "Commit failed: " + err.message }));
+            }
+            if (resident_id) {
+                createNotification('RESIDENT', resident_id, `Request #${request_id} completed. Cost Rs. ${cost}`).catch(console.error);
+            }
+            res.json({ message: "Request completed successfully" });
+          });
+        };
+
+        // If no flat_id exists (e.g. Asset task), just complete without billing
+        if (!flat_id) {
+           return completeWithoutBill();
+        }
 
         // 3. Insert bill (Prevent duplicate with IGNORE or check, but schema has UNIQUE on request_id)
         const insertBillSql = `
@@ -165,17 +182,7 @@ router.put("/complete/:request_id", (req, res) => {
             return db.rollback(() => res.status(500).json({ error: "Bill generation failed or already exists. " + err.message }));
           }
 
-          // 4. Commit
-          db.commit((err) => {
-            if (err) {
-              return db.rollback(() => res.status(500).json({ error: "Commit failed: " + err.message }));
-            }
-
-            // Notify Resident
-            createNotification('RESIDENT', resident_id, `Request #${request_id} completed. Cost Rs. ${cost}`).catch(console.error);
-
-            res.json({ message: "Request completed and bill generated successfully" });
-          });
+          completeWithoutBill();
         });
       });
     });
@@ -370,6 +377,67 @@ router.get("/technician/:technician_id", (req, res) => {
       return res.json([]); // safe fallback
     }
     res.json(results);
+  });
+});
+
+// ============================
+// Admin Dashboard Analysis Stats
+// ============================
+router.get("/stats/admin", (req, res) => {
+  const statusSql = `SELECT status, COUNT(*) as count FROM maintenance_request GROUP BY status`;
+  const categorySql = `SELECT request_category, COUNT(*) as count FROM maintenance_request GROUP BY request_category`;
+  
+  const trendsSql = `
+    SELECT DATE(request_date) as date, COUNT(*) as count 
+    FROM maintenance_request 
+    WHERE request_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+    GROUP BY DATE(request_date)
+    ORDER BY date ASC
+  `;
+
+  const techPerfSql = `
+    SELECT t.name, 
+           COUNT(mr.request_id) as total_tasks,
+           SUM(CASE WHEN mr.status = 'COMPLETED' THEN 1 ELSE 0 END) as completed_tasks
+    FROM technician t
+    LEFT JOIN maintenance_request mr ON t.technician_id = mr.technician_id
+    GROUP BY t.technician_id
+  `;
+
+  const financeSql = `
+    SELECT DATE(completed_at) as date, SUM(cost) as total_cost
+    FROM maintenance_request
+    WHERE status = 'COMPLETED' AND completed_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+    GROUP BY DATE(completed_at)
+    ORDER BY date ASC
+  `;
+
+  db.query(statusSql, (err1, statusResults) => {
+    if (err1) return res.status(500).json(err1);
+    
+    db.query(categorySql, (err2, categoryResults) => {
+      if (err2) return res.status(500).json(err2);
+      
+      db.query(trendsSql, (err3, trendsResults) => {
+        if (err3) return res.status(500).json(err3);
+        
+        db.query(techPerfSql, (err4, techPerfResults) => {
+          if (err4) return res.status(500).json(err4);
+          
+          db.query(financeSql, (err5, financeResults) => {
+            if (err5) return res.status(500).json(err5);
+            
+            res.json({
+              statusStats: statusResults,
+              categoryStats: categoryResults,
+              requestTrends: trendsResults,
+              techPerformance: techPerfResults,
+              financialTrends: financeResults
+            });
+          });
+        });
+      });
+    });
   });
 });
 

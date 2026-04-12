@@ -21,7 +21,11 @@ function runMigrations() {
     });
 
     db.query(`ALTER TABLE maintenance_request ADD COLUMN completed_at DATETIME`, (err) => {
-        if (err && err.code !== 'ER_DUP_FIELDNAME') console.error("Migration warning (completed_at):", err.message);
+        if (err && err.code !== 'ER_DUP_FIELDNAME') { 
+            console.error("Migration warning (completed_at):", err.message);
+        } else {
+            console.log("SUCCESS: completed_at deployed");
+        }
     });
 
     db.query(`ALTER TABLE maintenance_request MODIFY status DEFAULT 'PENDING'`, (err) => {

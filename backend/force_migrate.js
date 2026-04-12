@@ -7,4 +7,4 @@ runMigrations();
 setTimeout(() => {
    console.log("Migrations applied successfully. Please check your app now.");
    process.exit(0);
-}, 2000);
+}, 15000);
