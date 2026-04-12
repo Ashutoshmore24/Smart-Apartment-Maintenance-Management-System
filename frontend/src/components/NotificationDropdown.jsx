@@ -1,3 +1,4 @@
+/* Everything Ready */
 import React, { useState, useEffect, useRef } from 'react';
 import { Bell, CheckCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';

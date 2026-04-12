@@ -1,3 +1,4 @@
+/* Everything Ready */
 import React, { useEffect, useState, useMemo } from 'react';
 import {
     PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend,

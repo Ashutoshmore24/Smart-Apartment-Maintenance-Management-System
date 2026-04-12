@@ -1,3 +1,4 @@
+/* Everything Ready */
 const db = require('../db');
 
 // Utility function to create a notification (to be used by other controllers/routes)

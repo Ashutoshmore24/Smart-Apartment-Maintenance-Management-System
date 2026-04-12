@@ -1,3 +1,4 @@
+/* Everything Ready */
 require("dotenv").config();
 const runMigrations = require("./migrations");
 

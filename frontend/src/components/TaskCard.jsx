@@ -1,3 +1,4 @@
+/* Everything Ready */
 import React, { useState } from 'react';
 import { ChevronDown, ChevronUp, User, MapPin, Phone, Mail, Clock, Calendar, CheckCircle, Zap, AlertTriangle, ShieldAlert } from 'lucide-react';
 import StatusBadge from './StatusBadge';

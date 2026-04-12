@@ -1,3 +1,4 @@
+/* Everything Ready */
 import React from 'react';
 import StatusBadge from './StatusBadge';
 import { Package, User, FileText, Loader2, Inbox } from 'lucide-react';

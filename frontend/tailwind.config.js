@@ -1,3 +1,4 @@
+/* Everything Ready */
 /** @type {import('tailwindcss').Config} */
 export default {
     darkMode: 'class',   

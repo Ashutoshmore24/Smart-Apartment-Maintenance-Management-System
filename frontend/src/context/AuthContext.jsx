@@ -1,3 +1,4 @@
+/* Everything Ready */
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 const BACKEND_URL =

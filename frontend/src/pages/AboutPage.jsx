@@ -1,3 +1,4 @@
+/* Everything Ready */
 import React from "react";
 import aboutImg from "../assets/apartmentimg.webp";
 

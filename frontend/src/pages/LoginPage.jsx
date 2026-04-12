@@ -1,3 +1,4 @@
+/* Everything Ready */
 import React, { useState } from "react";
 import { loginResident, loginTechnician } from "../api";
 import { useNavigate, Link } from "react-router-dom";

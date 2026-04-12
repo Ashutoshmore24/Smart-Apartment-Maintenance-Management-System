@@ -1,3 +1,4 @@
+/* Everything Ready */
 import React, { useEffect, useState } from 'react';
 import api from '../api';
 import StatusBadge from '../components/StatusBadge';

@@ -1,3 +1,4 @@
+/* Everything Ready */
 import React from "react";
 import { Link } from "react-router-dom";
 import { Building, ShieldCheck, Wrench, ArrowRight, Database } from "lucide-react";

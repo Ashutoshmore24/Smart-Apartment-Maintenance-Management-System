@@ -1,3 +1,4 @@
+/* Everything Ready */
 const BACKEND_URL =
   import.meta.env.VITE_BACKEND_URL ||
   "https://smart-apartment-maintenance-management-w8ds.onrender.com";

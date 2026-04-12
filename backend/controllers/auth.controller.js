@@ -1,3 +1,4 @@
+/* Everything Ready */
 const FRONTEND_URL =
   process.env.FRONTEND_URL ||
     "https://smart-apartment-maintenance-managem.vercel.app";

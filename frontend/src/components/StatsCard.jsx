@@ -1,3 +1,4 @@
+/* Everything Ready */
 import React from 'react';
 
 const StatsCard = ({ title, count, icon: Icon, colorClass, bgColorClass }) => {

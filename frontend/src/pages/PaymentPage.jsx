@@ -1,3 +1,4 @@
+/* Everything Ready */
 import React, { useEffect, useState, useCallback } from "react";
 import PaymentForm from "../components/PaymentForm";
 import RecentPayments from "../components/RecentPayments";

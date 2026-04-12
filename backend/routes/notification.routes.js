@@ -1,3 +1,4 @@
+/* Everything Ready */
 const express = require('express');
 const router = express.Router();
 const { getUserNotifications, markAsRead } = require('../controllers/notification.controller');

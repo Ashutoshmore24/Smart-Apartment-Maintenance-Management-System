@@ -1,3 +1,4 @@
+/* Everything Ready */
 import React, { useState } from 'react';
 import api from '../api';
 import { CreditCard, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';

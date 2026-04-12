@@ -1,3 +1,4 @@
+/* Everything Ready */
 require("dotenv").config();
 const db = require("./db");
 const cors = require("cors");

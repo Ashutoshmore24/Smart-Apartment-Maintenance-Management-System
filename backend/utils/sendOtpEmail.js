@@ -1,3 +1,4 @@
+/* Everything Ready */
 function otpEmailHtml(otp) {
     return `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">

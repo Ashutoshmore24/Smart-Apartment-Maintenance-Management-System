@@ -1,3 +1,4 @@
+/* Everything Ready */
 const express = require("express");
 const db = require("../db");
 const { createNotification } = require("../controllers/notification.controller");

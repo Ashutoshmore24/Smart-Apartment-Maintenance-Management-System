@@ -1,3 +1,4 @@
+/* Everything Ready */
 const db = require("./db");
 
 async function fix() {

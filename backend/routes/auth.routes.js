@@ -1,3 +1,4 @@
+/* Everything Ready */
 // backend/routes/auth.routes.js
 const FRONTEND_URL =
   process.env.FRONTEND_URL ||

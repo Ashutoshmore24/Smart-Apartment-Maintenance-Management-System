@@ -1,3 +1,4 @@
+/* Everything Ready */
 import React from 'react';
 import { CheckCircle, Clock, AlertTriangle, HelpCircle } from 'lucide-react';
 

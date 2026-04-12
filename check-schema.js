@@ -1,3 +1,4 @@
+/* Everything Ready */
 const db = require('./backend/db');
 
 async function checkSchema() {
