@@ -29,16 +29,18 @@ router.get("/pending/:resident_id", (req, res) => {
 router.post("/pay", (req, res) => {
   const { request_id, flat_id, payment_mode, amount: sentAmount } = req.body;
 
+  // 🛡️ Relaxed check: Since request_id is UNIQUE in maintenance_request_bill, 
+  // we primarily rely on it. We allow flat_id to be NULL or missing.
   const checkSql = `
     SELECT request_bill_id, amount
     FROM maintenance_request_bill
     WHERE request_id = ?
-      AND flat_id = ?
+      AND (flat_id = ? OR flat_id IS NULL OR ? IS NULL)
       AND payment_status = 'PENDING'
   `;
 
-  db.query(checkSql, [request_id, flat_id], (err, rows) => {
-    if (err) return res.status(500).json(err);
+  db.query(checkSql, [request_id, flat_id, flat_id], (err, rows) => {
+    if (err) return res.status(500).json({ message: "Database query failed: " + err.message });
 
     if (rows.length === 0) {
       return res.status(403).json({
