@@ -2,8 +2,7 @@
 Smart Apartment Maintenance Management System is a DBMS-based application that manages apartment maintenance requests, staff assignments, status tracking, and billing. It ensures structured data handling, faster issue resolution, and transparent maintenance workflows.
 
 ## 📂 Folder Structure :
-
-will upload soon
+<img src="https://github.com/user-attachments/assets/ac3ff027-7f2e-48f0-aea6-afc937415f04" width="350" alt="File structure" />
 
 ---
 
@@ -150,6 +149,11 @@ Frontend runs at: http://localhost:5173
 cd frontend
 npm install axios
 ```
+---
+
+## 🏗️ System Architecture Diagram
+<img width="2308" height="1728" alt="diagram (1)" src="https://github.com/user-attachments/assets/8e4c6786-067c-4f39-9728-e18499c2ddc2" />
+
 ---
 
 ## ER Diagram : 
