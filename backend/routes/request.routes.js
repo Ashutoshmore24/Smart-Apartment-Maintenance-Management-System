@@ -195,18 +195,17 @@ router.put("/complete/:request_id", (req, res) => {
             });
           };
 
-          // If no flat_id exists (e.g. Asset task), just complete without billing
-          if (!flat_id) {
-            return finishCompletion();
-          }
+          // If no flat_id exists (e.g. Asset task or unassigned resident), 
+          // we still generate the bill (flat_id will be null). 
+          // The guard !flat_id is removed to ensure all residents get billed.
 
-          // 3. Insert bill
+          // 3. Insert bill (flat_id can be null now)
           const insertBillSql = `
             INSERT INTO maintenance_request_bill(request_id, flat_id, amount)
             VALUES(?, ?, ?)
           `;
 
-          connection.query(insertBillSql, [request_id, flat_id, numericCost], (err) => {
+          connection.query(insertBillSql, [request_id, flat_id || null, numericCost], (err) => {
             if (err) {
               return connection.rollback(() => {
                 connection.release();

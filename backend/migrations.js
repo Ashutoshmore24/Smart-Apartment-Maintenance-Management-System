@@ -103,6 +103,18 @@ function runMigrations() {
         });
     });
 
+        });
+    });
+
+    // 6. Make flat_id nullable in maintenance_request_bill
+    db.query(`ALTER TABLE maintenance_request_bill MODIFY flat_id INT NULL`, (err) => {
+        if (err) {
+            // console.error("Migration warning (nullable flat_id):", err.message);
+        } else {
+            console.log("SUCCESS: maintenance_request_bill.flat_id is now nullable");
+        }
+    });
+
     console.log("Database migrations dispatched successfully!");
 }
 
