@@ -103,9 +103,6 @@ function runMigrations() {
         });
     });
 
-        });
-    });
-
     // 6. Make flat_id nullable in maintenance_request_bill
     db.query(`ALTER TABLE maintenance_request_bill MODIFY flat_id INT NULL`, (err) => {
         if (err) {
