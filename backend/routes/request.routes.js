@@ -69,39 +69,47 @@ router.put("/:id", (req, res) => {
   const { status, technician_id } = req.body;
   const { id } = req.params;
 
-  let sql = "UPDATE maintenance_request SET ";
-  const params = [];
-
-  if (status) {
-    sql += "status = ?";
-    params.push(status);
-  }
-
-  if (technician_id) {
-    if (params.length > 0) sql += ", ";
-    sql += "technician_id = ?";
-    params.push(technician_id);
-  }
-
-  sql += " WHERE request_id = ?";
-  params.push(id);
-
-  db.query(sql, params, (err) => {
+  // 🛡️ PREVENT MODIFICATION OF COMPLETED REQUESTS
+  db.query("SELECT status FROM maintenance_request WHERE request_id = ?", [id], (err, rows) => {
     if (err) return res.status(500).json(err);
+    if (rows.length > 0 && rows[0].status === 'COMPLETED') {
+        return res.status(400).json({ message: "Completed requests cannot be modified." });
+    }
 
-    // Notification Logic
-    const getResidentSql = `SELECT resident_id FROM maintenance_request WHERE request_id = ?`;
-    db.query(getResidentSql, [id], (err2, rows) => {
-      if (!err2 && rows.length > 0) {
-        const resident_id = rows[0].resident_id;
-        if (technician_id) {
-          createNotification('TECHNICIAN', technician_id, `You have been assigned to request #${id}`).catch(console.error);
+    let sql = "UPDATE maintenance_request SET ";
+    const params = [];
+
+    if (status) {
+      sql += "status = ?";
+      params.push(status);
+    }
+
+    if (technician_id) {
+      if (params.length > 0) sql += ", ";
+      sql += "technician_id = ?";
+      params.push(technician_id);
+    }
+
+    sql += " WHERE request_id = ?";
+    params.push(id);
+
+    db.query(sql, params, (err) => {
+      if (err) return res.status(500).json(err);
+
+      // Notification Logic
+      const getResidentSql = `SELECT resident_id FROM maintenance_request WHERE request_id = ?`;
+      db.query(getResidentSql, [id], (err2, rows) => {
+        if (!err2 && rows.length > 0) {
+          const resident_id = rows[0].resident_id;
+          if (technician_id) {
+            createNotification('TECHNICIAN', technician_id, `You have been assigned to request #${id}`).catch(console.error);
+          }
+          if (status) {
+            createNotification('RESIDENT', resident_id, `Status of request #${id} updated to ${status}`).catch(console.error);
+          }
         }
-        if (status) {
-          createNotification('RESIDENT', resident_id, `Status of request #${id} updated to ${status}`).catch(console.error);
-        }
-      }
-      res.json({ message: "Request updated successfully" });
+        res.json({ message: "Request updated successfully" });
+      });
     });
   });
 });

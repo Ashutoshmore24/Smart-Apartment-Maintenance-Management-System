@@ -1,5 +1,6 @@
 const express = require("express");
 const db = require("../db");
+const jwt = require("jsonwebtoken");
 
 const router = express.Router();
 
@@ -135,9 +136,23 @@ router.post("/login", (req, res) => {
 
         const resident = results[0];
 
+        const token = jwt.sign(
+            { id: resident.resident_id, role: 'resident' },
+            process.env.JWT_SECRET || "defaultsecret",
+            { expiresIn: "1d" }
+        );
+
+        res.cookie("token", token, { 
+            httpOnly: true, 
+            secure: true, 
+            path: "/", 
+            sameSite: "none" 
+        });
+
         res.json({
             message: "Login successful",
-            user: resident
+            user: resident,
+            role: "resident"
         });
     });
 });
@@ -164,9 +179,23 @@ router.post("/login/technician", (req, res) => {
             return res.status(403).json({ message: "Your account is pending admin approval." });
         }
 
+        const token = jwt.sign(
+            { id: technician.technician_id, role: 'technician' },
+            process.env.JWT_SECRET || "defaultsecret",
+            { expiresIn: "1d" }
+        );
+
+        res.cookie("token", token, { 
+            httpOnly: true, 
+            secure: true, 
+            path: "/", 
+            sameSite: "none" 
+        });
+
         res.json({
             message: "Login successful",
-            user: technician
+            user: technician,
+            role: "technician"
         });
     });
 });

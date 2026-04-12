@@ -152,18 +152,32 @@ exports.getMe = async (req, res) => {
         if (!token) return res.status(401).json({ message: "Not authenticated" });
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET || "defaultsecret");
+        
+        // 1. Try finding resident
+        const [residentResult] = await db.promise().query("SELECT * FROM resident WHERE resident_id = ?", [decoded.id]);
 
-        const [result] = await db.promise().query("SELECT * FROM resident WHERE resident_id = ?", [decoded.id]);
+        if (residentResult.length > 0) {
+            const user = residentResult[0];
+            return res.json({ 
+                user: { ...user, role: "resident" }, 
+                role: "resident" 
+            });
+        }
 
-        if (result.length === 0) return res.status(404).json({ message: "User not found" });
+        // 2. Try finding technician
+        const [techResult] = await db.promise().query("SELECT * FROM technician WHERE technician_id = ?", [decoded.id]);
 
-        const user = result[0];
-        const formattedUser = {
-            ...user,
-            role: "resident"
-        };
-        res.json({ user: formattedUser, role: "resident" });
+        if (techResult.length > 0) {
+            const user = techResult[0];
+            return res.json({ 
+                user: { ...user, role: "technician" }, 
+                role: "technician" 
+            });
+        }
+
+        return res.status(404).json({ message: "User not found" });
     } catch (error) {
+        console.error("getMe Error:", error);
         res.status(401).json({ message: "Invalid token" });
     }
 };

@@ -108,13 +108,18 @@ router.get("/history/:resident_id", (req, res) => {
 
   const sql = `
     SELECT p.payment_id, p.payment_date, p.amount, 
-           r.request_id, r.request_type, r.request_category
+           r.request_id, r.request_type, r.request_category,
+           res.name AS resident_name,
+           t.name AS technician_name,
+           p.payment_mode
     FROM payment p
     JOIN maintenance_request_bill b ON p.bill_id = b.request_bill_id
     JOIN maintenance_request r ON b.request_id = r.request_id
+    LEFT JOIN resident res ON r.resident_id = res.resident_id
+    LEFT JOIN technician t ON r.technician_id = t.technician_id
     WHERE r.resident_id = ?
-    ORDER BY p.payment_date DESC
-    LIMIT 10
+    ORDER BY p.payment_id DESC
+    LIMIT 20
   `;
 
   db.query(sql, [resident_id], (err, results) => {

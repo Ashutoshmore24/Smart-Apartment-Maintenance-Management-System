@@ -56,8 +56,15 @@ const TaskCard = ({ task, onComplete }) => {
                             Complete Task
                         </button>
                     ) : (
-                        <div className="flex items-center gap-1 px-3 py-1 font-bold text-green-700 bg-green-100 rounded-full dark:bg-green-900/30 dark:text-green-400">
-                            <CheckCircle size={14} /> Done
+                        <div className="flex flex-col items-end gap-1">
+                            <div className="flex items-center gap-1 px-3 py-1 font-bold text-green-700 bg-green-100 rounded-full dark:bg-green-900/30 dark:text-green-400">
+                                <CheckCircle size={14} /> Done
+                            </div>
+                            {task.cost > 0 && (
+                                <span className="text-sm font-bold text-gray-900 dark:text-white">
+                                    ₹{task.cost} Bill
+                                </span>
+                            )}
                         </div>
                     )}
                 </div>

@@ -18,11 +18,15 @@ const TechnicianDashboard = () => {
     });
 
     const fetchData = async () => {
-        if (!user) return;
+        if (!user || (!user.technician_id && user.role !== 'technician')) return;
+        
+        const techId = user.technician_id;
+        if (!techId) return;
+
         try {
             const [reqRes, statRes] = await Promise.all([
-                api.get(`/requests/technician/${user.technician_id}`),
-                getTechStats(user.technician_id)
+                api.get(`/requests/technician/${techId}`),
+                getTechStats(techId)
             ]);
 
             const list = reqRes.data;
@@ -36,10 +40,12 @@ const TechnicianDashboard = () => {
     };
 
     useEffect(() => {
-        fetchData();
-        // Auto refresh every 10 seconds
-        const intervalId = setInterval(fetchData, 10000);
-        return () => clearInterval(intervalId);
+        if (user && user.role === 'technician') {
+            fetchData();
+            // Auto refresh every 10 seconds
+            const intervalId = setInterval(fetchData, 10000);
+            return () => clearInterval(intervalId);
+        }
     }, [user]);
 
     const handleComplete = async (id) => {
