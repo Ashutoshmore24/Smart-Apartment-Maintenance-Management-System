@@ -15,6 +15,8 @@ const app = express(); // ✅ FIRST create app
 const defaultOrigins = [
   "http://localhost:5173",
   "http://127.0.0.1:5173",
+  "http://localhost:5174",
+  "http://127.0.0.1:5174",
   "https://smart-apartment-maintenance-managem.vercel.app",
 ];
 const extraOrigins = process.env.ALLOWED_ORIGINS
