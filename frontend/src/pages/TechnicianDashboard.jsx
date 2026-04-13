@@ -1,10 +1,10 @@
-/* Everything Ready */
 import React, { useEffect, useState } from 'react';
 import api, { getTechStats } from '../api';
 import { useAuth } from '../context/AuthContext';
-import { CheckCircle, Search, Filter, Activity, Clock, Target, ListTodo, AlertTriangle, PlayCircle } from 'lucide-react';
+import { CheckCircle, Search, Filter, Activity, Clock, Target, ListTodo, AlertTriangle, PlayCircle, RefreshCw, Sparkles } from 'lucide-react';
 import StatsCard from '../components/StatsCard';
 import TaskCard from '../components/TaskCard';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const TechnicianDashboard = () => {
     const { user } = useAuth();
@@ -66,14 +66,12 @@ const TechnicianDashboard = () => {
         }
     };
 
-    // Calculate Dashboard Top Summary stats from the requests list locally
     const totalTasks = requests.length;
     const pendingTasks = requests.filter(r => r.status === 'PENDING').length;
     const inProgressTasks = requests.filter(r => r.status === 'IN_PROGRESS').length;
     const completedTasks = requests.filter(r => r.status === 'COMPLETED').length;
     const emergencyTasks = requests.filter(r => r.priority === 'EMERGENCY' && r.status !== 'COMPLETED').length;
 
-    // Filtering & Searching Logic
     const filteredRequests = requests.filter(r => {
         const matchesSearch = 
             (r.resident_name || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -90,95 +88,123 @@ const TechnicianDashboard = () => {
         }
     });
 
-    if (!user) return null;
+    if (!user) return (
+        <div className="flex items-center justify-center min-h-[60vh] text-surface-500 font-bold uppercase tracking-widest animate-pulse">
+            Loading Technician Panel...
+        </div>
+    );
 
     return (
-        <div className="px-4 py-8 mx-auto space-y-8 max-w-7xl">
+        <div className="px-6 py-12 mx-auto max-w-7xl selection:bg-primary-500/30">
             {/* Header & Performance Section */}
-            <div className="flex flex-col justify-between gap-6 lg:flex-row">
-                <div>
-                    <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white">Technician Workspace</h1>
-                    <p className="mt-2 text-lg text-gray-600 dark:text-gray-300">Welcome back, {user.name}.</p>
+            <motion.div 
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex flex-col items-start justify-between gap-8 mb-12 lg:flex-row lg:items-end"
+            >
+                <div className="space-y-2">
+                    <h1 className="text-4xl font-black tracking-tight text-surface-900 dark:text-white lg:text-5xl uppercase italic">
+                        Technician <span className="gradient-text">Workspace</span>
+                    </h1>
+                    <p className="text-lg font-medium text-surface-500 dark:text-surface-400">
+                        Operational Control Center for <span className="text-primary-600 dark:text-primary-400 font-black tracking-tight uppercase">{user.name}</span>
+                    </p>
                 </div>
                 
-                {/* Technician Performance Card */}
-                <div className="flex gap-6 p-4 border border-blue-100 shadow-sm rounded-xl bg-gradient-to-r from-blue-50 to-white dark:from-blue-900/40 dark:to-gray-800 shrink-0">
-                    <div className="flex flex-col items-center px-4 border-r border-blue-200 dark:border-blue-800/50">
-                        <Activity className="mb-1 text-blue-600" size={20}/>
-                        <span className="text-2xl font-bold text-gray-900 dark:text-white">{stats.completed_today}</span>
-                        <span className="text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">Done Today</span>
-                    </div>
-                    <div className="flex flex-col items-center px-4 border-r border-blue-200 dark:border-blue-800/50">
-                        <Clock className="mb-1 text-blue-600" size={20}/>
-                        <span className="text-2xl font-bold text-gray-900 dark:text-white">{stats.avg_completion_hours}h</span>
-                        <span className="text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">Avg Time</span>
-                    </div>
-                    <div className="flex flex-col items-center px-4">
-                        <Target className="mb-1 text-blue-600" size={20}/>
-                        <span className="text-2xl font-bold text-gray-900 dark:text-white">{stats.efficiency_percentage}%</span>
-                        <span className="text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">Efficiency</span>
-                    </div>
+                {/* Performance HUD */}
+                <div className="flex gap-1 p-1 bg-surface-100 dark:bg-surface-900/50 rounded-3xl border border-surface-200 dark:border-surface-800 shadow-inner">
+                    {[
+                        { label: 'Today', value: stats.completed_today, icon: Activity, color: 'text-emerald-500' },
+                        { label: 'Avg Time', value: `${stats.avg_completion_hours}h`, icon: Clock, color: 'text-primary-500' },
+                        { label: 'Target', value: `${stats.efficiency_percentage}%`, icon: Target, color: 'text-amber-500' },
+                    ].map((hud, i) => (
+                        <div key={i} className="flex flex-col items-center px-6 py-3 rounded-2xl bg-white dark:bg-surface-900 shadow-sm border border-surface-50 dark:border-surface-800">
+                            <hud.icon className={`mb-1 ${hud.color}`} size={16} strokeWidth={3} />
+                            <span className="text-2xl font-black text-surface-900 dark:text-white leading-none mb-1">{hud.value}</span>
+                            <span className="text-[10px] font-black tracking-widest text-surface-400 uppercase">{hud.label}</span>
+                        </div>
+                    ))}
                 </div>
+            </motion.div>
+
+            {/* Stats Overview */}
+            <div className="grid grid-cols-1 gap-6 mb-12 sm:grid-cols-2 lg:grid-cols-5">
+                <StatsCard title="Total Assigned" count={totalTasks} icon={ListTodo} colorClass="text-primary-600" bgColorClass="bg-primary-500/5" />
+                <StatsCard title="Pending" count={pendingTasks} icon={AlertTriangle} colorClass="text-rose-600" bgColorClass="bg-rose-500/5" />
+                <StatsCard title="In Progress" count={inProgressTasks} icon={PlayCircle} colorClass="text-amber-600" bgColorClass="bg-amber-500/5" />
+                <StatsCard title="Completed" count={completedTasks} icon={CheckCircle} colorClass="text-emerald-600" bgColorClass="bg-emerald-500/5" />
+                <StatsCard title="Emergency" count={emergencyTasks} icon={Sparkles} colorClass="text-rose-600" bgColorClass="bg-rose-500/10 border-rose-200 dark:border-rose-900/30" />
             </div>
 
-            {/* Stats Bar */}
-            <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
-                <StatsCard title="Total" count={totalTasks} icon={ListTodo} colorClass="text-blue-600" bgColorClass="bg-white dark:bg-gray-800" />
-                <StatsCard title="Pending" count={pendingTasks} icon={AlertTriangle} colorClass="text-amber-500" bgColorClass="bg-white dark:bg-gray-800" />
-                <StatsCard title="In Progress" count={inProgressTasks} icon={PlayCircle} colorClass="text-indigo-500" bgColorClass="bg-white dark:bg-gray-800" />
-                <StatsCard title="Completed" count={completedTasks} icon={CheckCircle} colorClass="text-emerald-500" bgColorClass="bg-white dark:bg-gray-800" />
-                <StatsCard title="Emergency" count={emergencyTasks} icon={Activity} colorClass="text-red-500" bgColorClass="bg-red-50 dark:bg-red-900/20 border-red-100 dark:border-red-800/30" />
-            </div>
-
-            {/* Filter & Search Bar */}
-            <div className="flex flex-col items-center justify-between gap-4 p-2 bg-gray-100 shadow-inner md:flex-row rounded-xl dark:bg-gray-800/80">
-                <div className="flex w-full gap-1 p-1 overflow-x-auto md:w-auto hide-scrollbar">
+            {/* View Controls */}
+            <div className="flex flex-col items-center justify-between gap-6 p-3 glass-card rounded-[2rem] md:flex-row mb-8">
+                <div className="flex w-full gap-2 p-1 overflow-x-auto md:w-auto hide-scrollbar">
                     {['All', 'Pending', 'In Progress', 'Completed', 'Emergency'].map(f => (
                         <button
                             key={f}
                             onClick={() => setFilter(f)}
-                            className={`px-4 py-2 text-sm font-semibold rounded-lg whitespace-nowrap transition-all duration-200 ${
+                            className={`relative px-6 py-3 text-xs font-black uppercase tracking-widest transition-all duration-300 rounded-2xl ${
                                 filter === f 
-                                ? 'bg-white text-blue-700 shadow-sm ring-1 ring-black/5 dark:bg-blue-600 dark:text-white dark:ring-0' 
-                                : 'text-gray-600 hover:text-gray-900 hover:bg-white/50 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700'
+                                ? 'text-primary-600 dark:text-primary-400' 
+                                : 'text-surface-500 hover:text-surface-900 dark:hover:text-white'
                             }`}
                         >
-                            {f}
+                            <span className="relative z-10">{f}</span>
+                            {filter === f && (
+                                <motion.div
+                                    layoutId="tech-filter-pill"
+                                    className="absolute inset-0 bg-white dark:bg-surface-800 shadow-lg rounded-2xl"
+                                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                                    style={{ zIndex: 0 }}
+                                />
+                            )}
                         </button>
                     ))}
                 </div>
                 
-                <div className="relative w-full px-2 mt-2 md:w-72 md:mt-0 md:px-0">
-                    <Search className="absolute text-gray-400 transform -translate-y-1/2 left-4 md:left-2 top-1/2" size={18} />
+                <div className="relative w-full md:w-80">
+                    <Search className="absolute text-surface-400 transform -translate-y-1/2 left-4 top-1/2" size={18} />
                     <input 
                         type="text" 
-                        placeholder="Search resident or issue..." 
+                        placeholder="Search residents or issues..." 
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full py-2 pl-10 pr-4 text-sm placeholder-gray-400 bg-white border-0 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white dark:placeholder-gray-500"
+                        className="w-full py-4 pl-12 pr-6 text-sm font-bold bg-surface-50 border-none rounded-2xl focus:ring-4 focus:ring-primary-500/20 transition-all dark:bg-surface-800 dark:text-white shadow-inner"
                     />
                 </div>
             </div>
 
-            {/* Tasks List */}
-            <div className="space-y-4">
-                {loading && requests.length === 0 ? (
-                    <div className="p-12 font-medium text-center text-gray-500 dark:text-gray-400 animate-pulse">
-                        Loading workspace...
-                    </div>
-                ) : filteredRequests.length === 0 ? (
-                    <div className="p-12 text-center bg-white border-2 border-gray-200 border-dashed rounded-2xl dark:bg-gray-800 dark:border-gray-700">
-                        <CheckCircle className="mx-auto mb-4 text-gray-300 dark:text-gray-600" size={48} />
-                        <h3 className="text-lg font-bold text-gray-900 dark:text-white">All Caught Up!</h3>
-                        <p className="mt-1 text-gray-500 dark:text-gray-400">No tasks match the current filters.</p>
-                    </div>
-                ) : (
-                    <div className="grid grid-cols-1 gap-4">
-                        {filteredRequests.map(req => (
-                            <TaskCard key={req.request_id} task={req} onComplete={handleComplete} />
-                        ))}
-                    </div>
-                )}
+            {/* Task Execution Area */}
+            <div className="space-y-6">
+                <AnimatePresence mode="popLayout">
+                    {loading && requests.length === 0 ? (
+                        <motion.div 
+                            initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                            className="p-20 flex flex-col items-center gap-4"
+                        >
+                            <RefreshCw className="text-primary-500 animate-spin" size={40} />
+                            <span className="font-black text-xs uppercase tracking-[0.3em] text-surface-400">Syncing Data...</span>
+                        </motion.div>
+                    ) : filteredRequests.length === 0 ? (
+                        <motion.div 
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="p-20 text-center glass-card border-dashed rounded-[3rem] border-surface-200 dark:border-surface-800"
+                        >
+                            <div className="w-16 h-16 bg-emerald-500/10 text-emerald-500 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                                <CheckCircle size={32} strokeWidth={3} />
+                            </div>
+                            <h3 className="text-2xl font-black text-surface-900 dark:text-white uppercase tracking-tight">System Optimized</h3>
+                            <p className="mt-2 text-surface-500 font-medium">All tasks in current filter have been reconciled.</p>
+                        </motion.div>
+                    ) : (
+                        <div className="grid grid-cols-1 gap-6">
+                            {filteredRequests.map(req => (
+                                <TaskCard key={req.request_id} task={req} onComplete={handleComplete} />
+                            ))}
+                        </div>
+                    )}
+                </AnimatePresence>
             </div>
         </div>
     );
