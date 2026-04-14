@@ -67,7 +67,12 @@ The system eliminates manual communication gaps and ensures accountability throu
 - Dark / Light theme support & Responsive UI
 
 ---
+## 🎥 Project Demo
 
+Watch the complete demo of the Smart Apartment Maintenance Management System:
+- https://drive.google.com/file/d/1Ac7m--vpTplXZoH-aNGo3-h8r6yTp2oa/view?usp=sharing
+
+---
 
 ## 🚀 How to Run This Project (After Cloning)
 
