@@ -72,6 +72,12 @@ The system eliminates manual communication gaps and ensures accountability throu
 Watch the complete demo of the Smart Apartment Maintenance Management System:
 - https://drive.google.com/file/d/1Ac7m--vpTplXZoH-aNGo3-h8r6yTp2oa/view?usp=sharing
 
+OR 
+
+Scan the given below QR Code : 
+
+<img width="250" height="250" alt="DBMS QR" src="https://github.com/user-attachments/assets/6b2fbdc6-5ad4-45d0-a2ce-379bb923d23f" />
+
 ---
 
 ## 🚀 How to Run This Project (After Cloning)
