@@ -178,9 +178,10 @@ npm install axios
 
 ---
 
-<img width="864" height="806" alt="image" src="https://github.com/user-attachments/assets/28b883b1-ad40-43a1-ae0c-e3f139a97048" />
+<img width="1102" height="606" alt="actual er_schema" src="https://github.com/user-attachments/assets/56f237e3-ec41-473a-9acf-99cab035da2d" />
 
 
+---
 
 
 
